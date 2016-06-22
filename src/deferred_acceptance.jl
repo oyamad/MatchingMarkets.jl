@@ -33,7 +33,8 @@ the respondants, where `resp_matches[j]` is the proposer who repondant `j` is
 matched with.
 """
 function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
-                                         resp_prefs::Matrix{T})
+                                         resp_prefs::Matrix{T},
+                                         caps::Vector{T})
     num_props, num_resps = size(prop_prefs, 2), size(resp_prefs, 2)
 
     resp_ranks = _prefs2ranks(resp_prefs)
@@ -49,8 +50,17 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
     # Next resp to propose to
     next_resp = ones(Int, num_props)
 
+    # Set up index pointers
+    indptr = Array(Int, num_resps+1)
+    indptr[1] = 1
+    for i in 1:num_resps
+        indptr[i+1] = indptr[i] + caps[i]
+    end
+
+    num_caps = indptr[end] - 1
+
     # Props currently matched
-    current_props = fill(resp_unmatched_idx, num_resps)
+    current_props = fill(resp_unmatched_idx, num_caps)
 
     # Numbers of occupied seats
     nums_occupied = zeros(Int, num_resps)
@@ -69,18 +79,29 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
                 elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
                     # pass
 
-                #Some seats vacant
-                elseif nums_occupied[r] < 1
-                    current_props[r] = p
+                # Some seats vacant
+                elseif nums_occupied[r] < caps[r]
+                    current_props[indptr[r]+nums_occupied[r]] = p
                     is_single_prop[p] = false
                     nums_occupied[r] += 1
 
+                # All seats occupied
                 else
-                    current_matched = current_props[r]
-                    if resp_ranks[p, r] < resp_ranks[current_matched, r]
-                        current_props[r] = p
+                    # Find the least preferred among the currently accepted
+                    least_ptr = indptr[r]
+                    least = current_props[least_ptr]
+                    for i in indptr[r]:indptr[r+1]-1
+                        compared = current_props[i]
+                        if resp_ranks[least, r] < resp_ranks[compared, r]
+                            least_ptr = i
+                            least = compared
+                        end
+                    end
+
+                    if resp_ranks[p, r] < resp_ranks[least, r]
+                        current_props[least_ptr] = p
                         is_single_prop[p] = false
-                        is_single_prop[current_matched] = true
+                        is_single_prop[least] = true
                     end
                 end
                 next_resp[p] += 1
@@ -95,6 +116,13 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
     resp_matches = current_props
     resp_matches[resp_matches.==resp_unmatched_idx] = resp_unmatched
 
+    return prop_matches, resp_matches, indptr
+end
+
+function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
+                                         resp_prefs::Matrix{T})
+    caps = ones(T, size(resp_prefs, 2))
+    prop_matches, resp_matches, _ = deferred_acceptance(prop_prefs, resp_prefs, caps)
     return prop_matches, resp_matches
 end
 
