@@ -73,7 +73,7 @@ julia> f_prefs
 ```
 """
 function random_prefs(rng::AbstractRNG,
-	                  m::Integer, n::Integer; allow_unmatched::Bool=true)
+                      m::Integer, n::Integer; allow_unmatched::Bool=true)
     m_prefs = _random_prefs(rng, m, n, allow_unmatched)
     f_prefs = _random_prefs(rng, n, m, allow_unmatched)
     return m_prefs, f_prefs
@@ -84,7 +84,7 @@ random_prefs(m::Integer, n::Integer; allow_unmatched::Bool=true) =
 
 
 function _random_prefs(r::AbstractRNG,
-	                   m::Integer, n::Integer, allow_unmatched::Bool)
+                       m::Integer, n::Integer, allow_unmatched::Bool)
     prefs = Array(Int, n+1, m)
     for j in 1:m
         prefs[end, j] = 0

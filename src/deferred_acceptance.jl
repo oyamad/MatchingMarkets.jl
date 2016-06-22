@@ -33,7 +33,7 @@ the respondants, where `resp_matches[j]` is the proposer who repondant `j` is
 matched with.
 """
 function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
-	                                     resp_prefs::Matrix{T})
+                                         resp_prefs::Matrix{T})
     num_props, num_resps = size(prop_prefs, 2), size(resp_prefs, 2)
 
     resp_ranks = _prefs2ranks(resp_prefs)
