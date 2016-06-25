@@ -1,5 +1,3 @@
-using Matching: deferred_acceptance
-
 @testset "Testing deferred_acceptance.jl" begin
 
     @testset "deferred_acceptance" begin
