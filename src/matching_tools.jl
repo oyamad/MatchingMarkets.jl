@@ -8,7 +8,7 @@ Author: Daisuke Oyama
 # random_prefs
 
 """
-    random_prefs([rng, ]m, n, allow_unmatched=true)
+    random_prefs([rng, ]m, n[, ReturnCaps]; allow_unmatched=true)
 
 Generate random preference order lists for two groups, say, m males and n
 females.
@@ -17,22 +17,29 @@ Each male has a preference order over femals [1, ..., n] and "unmatched" which
 is represented by 0, while each female has a preference order over males
 [1, ..., m] and "unmatched" which is again represented by 0.
 
+The argument `ReturnCaps` should be supplied in the context of college
+admissions, in which case "males" and "females" should be read as "students"
+and "colleges", respectively, where each college has its capacity.
+
 The optional `rng` argument specifies a random number generator.
 
 # Arguments
 
-- `m::Integer` : Number of males.
-- `n::Integer` : Number of females.
-- `allow_unmatched::Bool(true)` : If false, return preference order lists of
-males and females where 0 is always placed in the last place, (i.e.,
-"unmatched" is least preferred by every individual).
+* `m::Integer` : Number of males.
+* `n::Integer` : Number of females.
+* `::Type{ReturnCaps}` : If supplied, `caps` is also returned.
+* `;allow_unmatched::Bool(true)` : If false, return preference order lists of
+  males and females where 0 is always placed in the last place, (i.e.,
+  "unmatched" is least preferred by every individual).
 
 # Returns
 
-- `m_prefs::Matrix{Int}` :  Array of shape (n+1, m), where each column contains
-a random permutation of 0, 1, ..., n.
-- `f_prefs::Matrix{Int}` :  Array of shape (m+1, n), where each column contains
-a random permutation of 0, 1, ..., m.
+* `m_prefs::Matrix{Int}` :  Array of shape (n+1, m), where each column contains
+  a random permutation of 0, 1, ..., n.
+* `f_prefs::Matrix{Int}` :  Array of shape (m+1, n), where each column contains
+  a random permutation of 0, 1, ..., m.
+* `caps::Vector{Int}` : Vector of length n containing each female's (or
+  college's) capacity. Returned only when `ReturnCaps` is supplied.
 
 # Examples
 
@@ -70,6 +77,29 @@ julia> f_prefs
  4  1  1
  3  4  2
  0  0  0
+
+julia> s_prefs, c_prefs, caps = random_prefs(4, 3, ReturnCaps);
+
+julia> s_prefs
+4x4 Array{Int64,2}:
+ 2  1  2  1
+ 1  3  1  0
+ 3  2  3  3
+ 0  0  0  2
+
+julia> c_prefs
+5x3 Array{Int64,2}:
+ 3  4  1
+ 0  1  4
+ 4  3  0
+ 1  2  3
+ 2  0  2
+
+julia> caps
+3-element Array{Int64,1}:
+ 1
+ 2
+ 2
 ```
 """
 function random_prefs(rng::AbstractRNG,
