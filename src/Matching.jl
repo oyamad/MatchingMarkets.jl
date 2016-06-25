@@ -4,6 +4,6 @@ include("deferred_acceptance.jl")
 include("matching_tools.jl")
 
 export deferred_acceptance
-export random_prefs
+export random_prefs, ReturnCaps
 
 end # module
