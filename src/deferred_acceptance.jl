@@ -8,29 +8,39 @@ Author: Daisuke Oyama
 # deferred_acceptance
 
 """
-    deferred_acceptance(prop_prefs, resp_prefs)
+    deferred_acceptance(prop_prefs, resp_prefs[, caps])
 
 Compute a stable matching by the deferred acceptance (Gale-Shapley) algorithm.
+Support both one-to-one (marrige) and many-to-one (college admission)
+matchings.
 
 # Arguments
 
-- `prop_prefs::Matrix` : Array of shape (n+1, m) containing the proposers'
-preference orders as columns, where m is the number of proposers and n is that
-of the respondants. `prop_prefs[j, i]` is the `j`-th preferred respondant for
-the `i`-th proposer, where "respondant `0`" represents "being single".
-- `resp_prefs::Matrix` : Array of shape (m+1, n) containing the respondants'
-preference orders as columns. `resp_prefs[i, j]` is the `i`-th preferred
-proposer for the `j`-th respondant, where "proposer `0`" represents "being
-single".
+* `prop_prefs::Matrix{Int}` : Array of shape (n+1, m) containing the proposers'
+  preference orders as columns, where m is the number of proposers and n is
+  that of the respondants. `prop_prefs[j, i]` is the `j`-th preferred
+  respondant for the `i`-th proposer, where "respondant `0`" represents "being
+  single".
+* `resp_prefs::Matrix{Int}` : Array of shape (m+1, n) containing the
+  respondants' preference orders as columns. `resp_prefs[i, j]` is the `i`-th
+  preferred proposer for the `j`-th respondant, where "proposer `0`" represents
+  "being single" (or "vacancy" in the context of college admissions).
+* `caps::Vector{Int}` : Vector of length n containing the respondnats'
+  capacities. If not supplied, the capacities are all regarded as one (i.e.,
+  the matching is one-to-one).
 
 # Returns
 
-- `prop_matches::Vector{Int}` : Vector of length m representing the matches for
-the proposers, where `prop_matches[i]` is the repondant who proposer `i` is
-matched with.
-- `resp_matches::Vector{Int}` : Vector of length n representing the matches for
-the respondants, where `resp_matches[j]` is the proposer who repondant `j` is
-matched with.
+* `prop_matches::Vector{Int}` : Vector of length m representing the matches for
+  the proposers, where `prop_matches[i]` is the repondant who proposer `i` is
+  matched with.
+* `resp_matches::Vector{Int}` : Vector of length n representing the matches for
+  the respondants: if `caps` is not supplied, `resp_matches[j]` is the proposer
+  who respondant `j` is matched with; if `caps` is specified, the proposers who
+  respondant `j` is matched with are contained in
+  `resp_matches[indptr[j]:indptr[j+1]-1]`.
+* `indptr::Vector{Int}` : Returned only when `caps` is specified. Contains
+  index pointers for `resp_matches`.
 """
 function deferred_acceptance(prop_prefs::Matrix{Int},
                              resp_prefs::Matrix{Int},
