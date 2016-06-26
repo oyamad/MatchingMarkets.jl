@@ -77,7 +77,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     nums_occupied = zeros(Int, num_resps)
 
     # Main loop
-    while sum(is_single_prop) > 0
+    while any(is_single_prop)
         for p in 1:num_props
             if is_single_prop[p]
                 r = prop_prefs[next_resp[p], p]  # p proposes r
