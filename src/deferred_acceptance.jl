@@ -32,9 +32,9 @@ matched with.
 the respondants, where `resp_matches[j]` is the proposer who repondant `j` is
 matched with.
 """
-function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
-                                         resp_prefs::Matrix{T},
-                                         caps::Vector{T})
+function deferred_acceptance(prop_prefs::Matrix{Int},
+                             resp_prefs::Matrix{Int},
+                             caps::Vector{Int})
     num_props, num_resps = size(prop_prefs, 2), size(resp_prefs, 2)
 
     resp_ranks = _prefs2ranks(resp_prefs)
@@ -45,7 +45,7 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
     # Index representing unmatched
     resp_unmatched_idx = num_props + 1
 
-    is_single_prop = ones(Bool, num_props)
+    is_single_prop = trues(num_props)
 
     # Next resp to propose to
     next_resp = ones(Int, num_props)
@@ -60,7 +60,8 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
     num_caps = indptr[end] - 1
 
     # Props currently matched
-    current_props = fill(resp_unmatched_idx, num_caps)
+    current_props = Array(Int, num_caps)
+    fill!(current_props, resp_unmatched_idx)
 
     # Numbers of occupied seats
     nums_occupied = zeros(Int, num_resps)
@@ -119,15 +120,15 @@ function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
     return prop_matches, resp_matches, indptr
 end
 
-function deferred_acceptance{T<:Integer}(prop_prefs::Matrix{T},
-                                         resp_prefs::Matrix{T})
-    caps = ones(T, size(resp_prefs, 2))
-    prop_matches, resp_matches, _ = deferred_acceptance(prop_prefs, resp_prefs, caps)
+function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
+    caps = ones(Int, size(resp_prefs, 2))
+    prop_matches, resp_matches, _ =
+        deferred_acceptance(prop_prefs, resp_prefs, caps)
     return prop_matches, resp_matches
 end
 
 
-function _prefs2ranks{T<:Integer}(prefs::Matrix{T})
+function _prefs2ranks(prefs::Matrix{Int})
     unmatched = 0
     ranks = similar(prefs)
     m, n = size(prefs)
