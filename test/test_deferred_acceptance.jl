@@ -112,4 +112,27 @@
         @test c_matched_computed == c_matched_expected
     end
 
+    # Invalid inputs
+
+    @testset "prefs arrays inconsistent shapes" begin
+        prop_prefs = [1 1;
+                      2 2]
+        resp_prefs = [1 1;
+                      2 2]
+        @test_throws ArgumentError deferred_acceptance(prop_prefs, resp_prefs)
+    end
+
+    @testset "caps inconsistent length" begin
+        prop_prefs = [1 1;
+                      2 2;
+                      0 0]
+        resp_prefs = [1 1;
+                      2 2;
+                      0 0]
+        caps = [2, 1, 2]
+        @test_throws ArgumentError deferred_acceptance(
+            prop_prefs, resp_prefs, caps
+        )
+    end
+
 end

@@ -47,6 +47,16 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
                              caps::Vector{Int})
     num_props, num_resps = size(prop_prefs, 2), size(resp_prefs, 2)
 
+    (size(prop_prefs) == (num_resps+1, num_props) &&
+     size(resp_prefs) == (num_props+1, num_resps)) ||
+        throw(ArgumentError("shapes of preferences arrays do not match"))
+
+    length(caps) == num_resps ||
+        throw(ArgumentError(
+            "`length(caps)` must be equal to `size(resp_prefs, 2)`"
+            )
+        )
+
     resp_ranks = _prefs2ranks(resp_prefs)
 
     # IDs representing unmatched
