@@ -113,7 +113,8 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
                     least = current_props[least_ptr]
                     for i in indptr[r]:indptr[r+1]-1
                         compared = current_props[i]
-                        if resp_ranks[least, r] < resp_ranks[compared, r]
+                        @inbounds if (resp_ranks[least, r] <
+                                      resp_ranks[compared, r])
                             least_ptr = i
                             least = compared
                         end
