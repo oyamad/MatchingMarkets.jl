@@ -90,7 +90,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     while any(is_single_prop)
         for p in 1:num_props
             if is_single_prop[p]
-                r = prop_prefs[next_resp[p], p]  # p proposes r
+                r = prop_prefs[next_resp[p], p]  # p proposes to r
 
                 # Prefers to be unmatched
                 if r == prop_unmatched
@@ -153,14 +153,12 @@ function _prefs2ranks(prefs::Matrix{Int})
     unmatched = 0
     ranks = similar(prefs)
     m, n = size(prefs)
-    for j in 1:n
-        for i in 1:m
-            k = prefs[i, j]
-            if k == unmatched
-                ranks[end, j] = i
-            else
-                ranks[k, j] = i
-            end
+    for j in 1:n, i in 1:m
+        k = prefs[i, j]
+        if k == unmatched
+            ranks[end, j] = i
+        else
+            ranks[k, j] = i
         end
     end
     return ranks
