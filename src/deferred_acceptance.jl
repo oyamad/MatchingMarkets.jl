@@ -99,7 +99,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     while any(is_single_prop)
         for p in 1:num_props
             if is_single_prop[p]
-                r = prop_prefs[next_resp[p], p]  # p proposes to r
+                @inbounds r = prop_prefs[next_resp[p], p]  # p proposes to r
 
                 # Prefers to be unmatched
                 if r == prop_unmatched
@@ -122,7 +122,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
                     if resp_ranks[p, r] < resp_ranks[least_prop, r]
                         replace_least!(bhs[r], p)
                         is_single_prop[p] = false
-                        is_single_prop[least_prop] = true
+                        @inbounds is_single_prop[least_prop] = true
                     end
                 end
                 next_resp[p] += 1
