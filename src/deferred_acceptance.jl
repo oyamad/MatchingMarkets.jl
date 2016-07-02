@@ -4,6 +4,7 @@ Deferred Acceptance (DA) algorithm
 Author: Daisuke Oyama
 
 =#
+import .Util: BinHeap, least!, replace_least!
 
 # deferred_acceptance
 
@@ -86,6 +87,14 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     # Numbers of occupied seats
     nums_occupied = zeros(Int, num_resps)
 
+    # Binary heaps
+    bhs = [
+        BinHeap(sub(resp_ranks, :, r),
+        	    sub(current_props, indptr[r]:indptr[r+1]-1),
+    	        false)
+    	for r in 1:num_resps
+    ]
+
     # Main loop
     while any(is_single_prop)
         for p in 1:num_props
@@ -108,22 +117,12 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
 
                 # All seats occupied
                 else
-                    # Find the least preferred among the currently accepted
-                    least_ptr = indptr[r]
-                    least = current_props[least_ptr]
-                    for i in indptr[r]:indptr[r+1]-1
-                        compared = current_props[i]
-                        @inbounds if (resp_ranks[least, r] <
-                                      resp_ranks[compared, r])
-                            least_ptr = i
-                            least = compared
-                        end
-                    end
-
-                    if resp_ranks[p, r] < resp_ranks[least, r]
-                        current_props[least_ptr] = p
+                    # Use binary heap structure
+                    least_prop = least!(bhs[r])
+                    if resp_ranks[p, r] < resp_ranks[least_prop, r]
+                        replace_least!(bhs[r], p)
                         is_single_prop[p] = false
-                        is_single_prop[least] = true
+                        is_single_prop[least_prop] = true
                     end
                 end
                 next_resp[p] += 1
