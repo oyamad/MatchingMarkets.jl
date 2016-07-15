@@ -45,16 +45,22 @@ matchings.
 """
 function deferred_acceptance(prop_prefs::Matrix{Int},
                              resp_prefs::Matrix{Int},
-                             caps::Vector{Int})
+                             prop_caps::Vector{Int},
+                             resp_caps::Vector{Int})
     num_props, num_resps = size(prop_prefs, 2), size(resp_prefs, 2)
 
     (size(prop_prefs) == (num_resps+1, num_props) &&
      size(resp_prefs) == (num_props+1, num_resps)) ||
         throw(ArgumentError("shapes of preferences arrays do not match"))
 
-    length(caps) == num_resps ||
+    length(prop_caps) == num_props ||
         throw(ArgumentError(
-            "`length(caps)` must be equal to `size(resp_prefs, 2)`"
+            "`length(prop_caps)` must be equal to `size(prop_prefs, 2)`"
+            )
+        )
+    length(resp_caps) == num_resps ||
+        throw(ArgumentError(
+            "`length(resp_caps)` must be equal to `size(resp_prefs, 2)`"
             )
         )
 
@@ -66,54 +72,57 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     # Index representing unmatched
     resp_unmatched_idx = num_props + 1
 
-    is_single_prop = trues(num_props)
-
-    # Next resp to propose to
-    next_resp = ones(Int, num_props)
-
     # Set up index pointers
-    indptr = Array(Int, num_resps+1)
-    indptr[1] = 1
-    for i in 1:num_resps
-        indptr[i+1] = indptr[i] + caps[i]
-    end
+    prop_indptr = _caps2indptr(prop_caps)
+    resp_indptr = _caps2indptr(resp_caps)
 
-    num_caps = indptr[end] - 1
+    num_prop_caps = prop_indptr[end] - 1
+    num_resp_caps = resp_indptr[end] - 1
+
+    #is_single_prop = trues(num_props)
+    # Numbers of props' vacant slots
+    nums_prop_vacant = copy(prop_caps)
+    total_num_prop_open_slots = num_prop_caps
+
+    # Next resps to propose to
+    next_resps = ones(Int, num_props)
 
     # Props currently matched
-    current_props = Array(Int, num_caps)
+    current_props = Array(Int, num_resp_caps)
     fill!(current_props, resp_unmatched_idx)
 
-    # Numbers of occupied seats
-    nums_occupied = zeros(Int, num_resps)
+    # Numbers of resps' occupied seats
+    nums_resp_occupied = zeros(Int, num_resps)
 
     # Binary heaps
     bhs = [
         BinHeap(sub(resp_ranks, :, r),
-        	    sub(current_props, indptr[r]:indptr[r+1]-1),
+        	    sub(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
     	        false)
     	for r in 1:num_resps
     ]
 
     # Main loop
-    while any(is_single_prop)
+    while total_num_prop_open_slots > 0
         for p in 1:num_props
-            if is_single_prop[p]
-                @inbounds r = prop_prefs[next_resp[p], p]  # p proposes to r
+            if nums_prop_vacant[p] > 0
+                @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
 
                 # Prefers to be unmatched
                 if r == prop_unmatched
-                    is_single_prop[p] = false
+                    total_num_prop_open_slots -= nums_prop_vacant[p]
+                    nums_prop_vacant[p] = 0
 
                 # Unacceptable for r
                 elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
                     # pass
 
                 # Some seats vacant
-                elseif nums_occupied[r] < caps[r]
-                    current_props[indptr[r]+nums_occupied[r]] = p
-                    is_single_prop[p] = false
-                    nums_occupied[r] += 1
+                elseif nums_resp_occupied[r] < resp_caps[r]
+                    current_props[resp_indptr[r]+nums_resp_occupied[r]] = p
+                    nums_resp_occupied[r] += 1
+                    nums_prop_vacant[p] -= 1
+                    total_num_prop_open_slots -= 1
 
                 # All seats occupied
                 else
@@ -121,29 +130,49 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
                     least_prop = least!(bhs[r])
                     if resp_ranks[p, r] < resp_ranks[least_prop, r]
                         replace_least!(bhs[r], p)
-                        is_single_prop[p] = false
-                        @inbounds is_single_prop[least_prop] = true
+                        nums_prop_vacant[p] -= 1
+                        @inbounds nums_prop_vacant[least_prop] += 1
                     end
                 end
-                next_resp[p] += 1
+                next_resps[p] += 1
             end
         end
     end
 
-    prop_matches = Array(Int, num_props)
-    for p in 1:num_props
-        prop_matches[p] = prop_prefs[next_resp[p]-1, p]
-    end
+    prop_matches = zeros(Int, num_prop_caps)
     resp_matches = current_props
-    resp_matches[resp_matches.==resp_unmatched_idx] = resp_unmatched
+    for r in 1:num_resps
+        for j in resp_indptr[r]:resp_indptr[r+1]-1
+            p = resp_matches[j]
+            if p == resp_unmatched_idx
+                resp_matches[j] = resp_unmatched
+            else
+                prop_matches[prop_indptr[p]+nums_prop_vacant[p]] = r
+                nums_prop_vacant[p] += 1
+            end
+        end
+    end
 
+    return prop_matches, resp_matches, prop_indptr, resp_indptr
+end
+
+# Many-to-one, student-proposing
+function deferred_acceptance(prop_prefs::Matrix{Int},
+                             resp_prefs::Matrix{Int},
+                             caps::Vector{Int})
+    prop_caps = ones(Int, size(prop_prefs, 2))
+    resp_caps = caps
+    prop_matches, resp_matches, _, indptr =
+        deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
     return prop_matches, resp_matches, indptr
 end
 
+# One-to-on
 function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
-    caps = ones(Int, size(resp_prefs, 2))
-    prop_matches, resp_matches, _ =
-        deferred_acceptance(prop_prefs, resp_prefs, caps)
+    prop_caps = ones(Int, size(prop_prefs, 2))
+    resp_caps = ones(Int, size(resp_prefs, 2))
+    prop_matches, resp_matches, _, _ =
+        deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
     return prop_matches, resp_matches
 end
 
@@ -161,4 +190,15 @@ function _prefs2ranks(prefs::Matrix{Int})
         end
     end
     return ranks
+end
+
+
+function _caps2indptr(caps::Vector{Int})
+    n = length(caps)
+    indptr = Array(Int, n+1)
+    indptr[1] = 1
+    @inbounds for i in 1:n
+        indptr[i+1] = indptr[i] + caps[i]
+    end
+    return indptr
 end
