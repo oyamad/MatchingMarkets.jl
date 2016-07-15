@@ -1,5 +1,7 @@
 module Util
 
+# BinHeap
+
 type BinHeap{TR<:AbstractVector,TD<:AbstractVector}
     ranking::TR
     data::TD
@@ -115,5 +117,61 @@ function _heap_bubble_down!(bh::BinHeap, i::Int)
 end
 
 # END: From DataStructures.jl/src/heaps/binary_heap.jl
+
+
+# Stack
+
+type Stack{T,TD<:AbstractVector}
+    data::TD
+    ptr::Int
+end
+
+Stack(data::AbstractVector) = Stack{eltype(data), typeof(data)}(data, 1)
+
+Base.length(s::Stack) = length(s.data) - s.ptr + 1
+isempty(s::Stack) = length(s) == 0
+isfull(s::Stack) = s.ptr == 1
+
+function top(s::Stack)
+    isempty(s) && throw(ArgumentError("Stack must be non-empty"))
+    @inbounds out = s.data[s.ptr]
+    return out
+end
+
+function pop!(s::Stack)
+    out = top(s)
+    s.ptr += 1
+    return out
+end
+
+function push!{T}(s::Stack{T}, x::T)
+    isfull(s) && throw(ArgumentError("Stack must not be full"))
+    s.ptr -= 1
+    @inbounds s.data[s.ptr] = x
+    return s
+end
+
+
+# Stacks
+
+type Stacks{T,TD<:AbstractVector}
+    data::Vector{Stack{T,TD}}
+    num_elements::Int
+end
+
+Base.getindex(stacks::Stacks, i::Int) = stacks.data[i]
+Base.length(stacks::Stacks) = stacks.num_elements
+
+top(stacks::Stacks, i::Int) = top(stacks[i])
+
+function pop!(stacks::Stacks, i::Int)
+    stacks.num_elements -= 1
+    return pop!(stacks[i])
+end
+
+function push!{T}(stacks::Stacks{T}, i::Int, x::T)
+    stacks.num_elements += 1
+    return push!(stacks[i], x)
+end
 
 end  # module
