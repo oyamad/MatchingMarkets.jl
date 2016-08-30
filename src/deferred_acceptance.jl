@@ -1,5 +1,6 @@
 #=
-Deferred Acceptance (DA) algorithm
+Implement the Deferred Acceptance (Gale-Shapley) algorithm. Support one-to-one,
+many-to-one, and many-to-many matching problems.
 
 Author: Daisuke Oyama
 
@@ -8,40 +9,38 @@ import .Util: BinHeap, least!, replace_least!
 
 # deferred_acceptance
 
+# Many-to-many
 """
-    deferred_acceptance(prop_prefs, resp_prefs[, caps])
+    deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
 
-Compute a stable matching by the deferred acceptance (Gale-Shapley) algorithm.
-Support both one-to-one (marrige) and many-to-one (college admission)
-matchings.
+Compute a stable matching by the DA algorithm for a many-to-many matching
+problem.
 
 # Arguments
 
 * `prop_prefs::Matrix{Int}` : Array of shape (n+1, m) containing the proposers'
   preference orders as columns, where m is the number of proposers and n is
-  that of the respondants. `prop_prefs[j, i]` is the `j`-th preferred
-  respondant for the `i`-th proposer, where "respondant `0`" represents "being
-  single".
+  that of the responders. `prop_prefs[j, i]` is the `j`-th preferred responder
+  for the `i`-th proposer, where "responder `0`" represents "vacancy".
 * `resp_prefs::Matrix{Int}` : Array of shape (m+1, n) containing the
-  respondants' preference orders as columns. `resp_prefs[i, j]` is the `i`-th
-  preferred proposer for the `j`-th respondant, where "proposer `0`" represents
-  "being single" (or "vacancy" in the context of college admissions).
-* `caps::Vector{Int}` : Vector of length n containing the respondnats'
-  capacities. If not supplied, the capacities are all regarded as one (i.e.,
-  the matching is one-to-one).
+  responders' preference orders as columns. `resp_prefs[i, j]` is the `i`-th
+  preferred proposer for the `j`-th responder, where "proposer `0`" epresents
+  "vacancy".
+* `prop_caps::Vector{Int}` : Vector of length n containing the proposers'
+  capacities.
+* `resp_caps::Vector{Int}` : Vector of length n containing the responders'
+  capacities.
 
 # Returns
 
 * `prop_matches::Vector{Int}` : Vector of length m representing the matches for
-  the proposers, where `prop_matches[i]` is the repondant who proposer `i` is
-  matched with.
+  the proposers, where the responders who proposer `i` is matched with are
+  contained in `prop_matches[prop_indptr[i]:prop_indptr[i+1]-1]`.
 * `resp_matches::Vector{Int}` : Vector of length n representing the matches for
-  the respondants: if `caps` is not supplied, `resp_matches[j]` is the proposer
-  who respondant `j` is matched with; if `caps` is specified, the proposers who
-  respondant `j` is matched with are contained in
-  `resp_matches[indptr[j]:indptr[j+1]-1]`.
-* `indptr::Vector{Int}` : Returned only when `caps` is specified. Contains
-  index pointers for `resp_matches`.
+  the responders, where the proposers who responder `j` is matched with are
+  contained in `resp_matches[resp_indptr[j]:resp_indptr[j+1]-1]`.
+* `prop_indptr::Vector{Int}` : Contains index pointers for `prop_matches`.
+* `resp_indptr::Vector{Int}` : Contains index pointers for `resp_matches`.
 """
 function deferred_acceptance(prop_prefs::Matrix{Int},
                              resp_prefs::Matrix{Int},
@@ -156,24 +155,90 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     return prop_matches, resp_matches, prop_indptr, resp_indptr
 end
 
-# Many-to-one, student-proposing
-function deferred_acceptance(prop_prefs::Matrix{Int},
-                             resp_prefs::Matrix{Int},
-                             caps::Vector{Int})
-    prop_caps = ones(Int, size(prop_prefs, 2))
-    resp_caps = caps
-    prop_matches, resp_matches, _, indptr =
-        deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
-    return prop_matches, resp_matches, indptr
-end
+# One-to-one
+"""
+    deferred_acceptance(prop_prefs, resp_prefs)
 
-# One-to-on
+Compute a stable matching by the DA algorithm for a one-to-one matching
+(marriage) problem.
+
+# Arguments
+
+* `prop_prefs::Matrix{Int}` : Array of shape (n+1, m) containing the proposers'
+  preference orders as columns, where m is the number of proposers and n is
+  that of the responders. `prop_prefs[j, i]` is the `j`-th preferred
+  responder for the `i`-th proposer, where "responder `0`" represents
+  "being-single".
+* `resp_prefs::Matrix{Int}` : Array of shape (m+1, n) containing the
+  responders' preference orders as columns. `resp_prefs[i, j]` is the `i`-th
+  preferred proposer for the `j`-th responder, where "proposer `0`" represents
+  "being-single".
+
+# Returns
+
+* `prop_matches::Vector{Int}` : Vector of length m representing the matches for
+  the proposers, where `prop_matches[i]` is the responder who proposer `i` is
+  matched with.
+* `resp_matches::Vector{Int}` : Vector of length n representing the matches for
+  the responders, where `resp_matches[j]` is the proposer who responder `j` is
+  matched with.
+"""
 function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
     prop_caps = ones(Int, size(prop_prefs, 2))
     resp_caps = ones(Int, size(resp_prefs, 2))
     prop_matches, resp_matches, _, _ =
         deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
     return prop_matches, resp_matches
+end
+
+# Many-to-one
+abstract DAProposal
+immutable SProposing <: DAProposal end
+immutable CProposing <: DAProposal end
+
+"""
+    deferred_acceptance(s_prefs, c_prefs, caps[, proposal])
+
+Compute a stable matching by the DA algorithm for a many-to-one matching
+(college admission) problem.
+
+# Arguments
+
+* `s_prefs::Matrix{Int}` : Array of shape (n+1, m) containing the students'
+  preference orders as columns, where m is the number of students and n is that
+  of the colleges. `s_prefs[j, i]` is the `j`-th preferred college for the
+  `i`-th studnet, where "college `0`" represents "being single".
+* `c_prefs::Matrix{Int}` : Array of shape (m+1, n) containing the colleges'
+  preference orders as columns. `c_prefs[i, j]` is the `i`-th preferred student
+  for the `j`-th college, where "student `0`" represents "vacancy".
+* `caps::Vector{Int}` : Vector of length n containing the colleges' capacities.
+* `proposal::Type(SProposing)` : `SProposing` runs the student-proposing DA
+  algorithm, while `CProposing` runs the college-proposing algorithm. Default
+  to the former.
+
+# Returns
+
+* `s_matches::Vector{Int}` : Vector of length m representing the matches for
+  the students, where `s_matches[i]` is the college that proposer `i` is
+  matched with.
+* `c_matches::Vector{Int}` : Vector of length n representing the matches for
+  the colleges, where the students who college `j` is matched with are
+  contained in `c_matches[indptr[j]:indptr[j+1]-1]`.
+* `indptr::Vector{Int}` : Contains index pointers for `c_matches`.
+"""
+function deferred_acceptance{P<:DAProposal}(s_prefs::Matrix{Int},
+                                            c_prefs::Matrix{Int},
+                                            caps::Vector{Int},
+                                            proposal::Type{P}=SProposing)
+    s_caps = ones(Int, size(s_prefs, 2))
+    if proposal == SProposing
+        s_matches, c_matches, _, indptr =
+            deferred_acceptance(s_prefs, c_prefs, s_caps, caps)
+    else
+        c_matches, s_matches, indptr, _ =
+            deferred_acceptance(c_prefs, s_prefs, caps, s_caps)
+    end
+    return s_matches, c_matches, indptr
 end
 
 
