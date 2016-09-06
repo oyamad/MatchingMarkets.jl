@@ -148,10 +148,18 @@ end
     indptr = [1, 5, 6, 9, 11, 12]
 
     # Optimal stable matchings
+
+    # Student optimal
     s_matches_s_opt = [3, 1, 4, 3, 1, 3, 2, 1, 4, 1, 5]
     c_matches_s_opt = [2, 5, 8, 10, 7, 1, 4, 6, 3, 9, 11]
-    s_matches_c_opt = [4, 4, 3, 1, 1, 3, 2, 2, 3, 1, 5, 1]
-    c_matches_c_opt = [4, 5, 9, 11, 7, 3, 6, 8, 1, 2, 10]
+
+    # Matching the book claims to be hospital-(or college-)optimal
+    # s_matches_c_opt = [4, 4, 3, 1, 1, 3, 2, 3, 1, 5, 1]
+    # c_matches_c_opt = [4, 5, 9, 11, 7, 3, 6, 8, 1, 2, 10]
+
+    # Matching actually hospital-(or college-)optimal
+    s_matches_c_opt = [4, 5, 3, 1, 1, 3, 2, 3, 1, 4, 1]
+    c_matches_c_opt = [4, 5, 9, 11, 7, 3, 6, 8, 1, 10, 2]
 
     d = Dict(
         "s_prefs" => s_prefs,
