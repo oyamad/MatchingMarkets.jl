@@ -95,8 +95,8 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
 
     # Binary heaps
     bhs = [
-        BinHeap(sub(resp_ranks, :, r),
-        	    sub(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
+        BinHeap(view(resp_ranks, :, r),
+        	    view(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
     	        false)
     	for r in 1:num_resps
     ]

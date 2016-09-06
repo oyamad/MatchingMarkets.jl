@@ -1,6 +1,6 @@
 function sort_matches!(matches::Vector{Int}, indptr::Vector{Int})
     for i in 1:length(indptr)-1
-        sort!(sub(matches, indptr[i]:indptr[i+1]-1))
+        sort!(view(matches, indptr[i]:indptr[i+1]-1))
     end
 end
 

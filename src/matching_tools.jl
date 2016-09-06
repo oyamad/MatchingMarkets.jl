@@ -142,7 +142,7 @@ function _random_prefs(rng::AbstractRNG, m::Integer, n::Integer)
         prefs[end, j] = 0
     end
 
-    _randperm2d!(rng, sub(prefs, 1:n, :))
+    _randperm2d!(rng, view(prefs, 1:n, :))
 
     return prefs
 end
@@ -235,7 +235,7 @@ them in columns of `a`.
 function _randperm2d!{T<:Integer}(r::AbstractRNG, a::AbstractMatrix{T})
     m, n = size(a)
     for j in :1:n
-        _randperm!(r, sub(a, :, j))
+        _randperm!(r, view(a, :, j))
     end
     a
 end
