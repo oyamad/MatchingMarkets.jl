@@ -6,8 +6,9 @@ makedocs(
     sitename = "Matching.jl",
     pages = Any[
         "Home" => "index.md",
-        "API" => Any[
-            "Matching" => "api/Matching.md"
+        "Library" => Any[
+            "lib/public.md",
+            "lib/internals.md",
         ],
     ]
 )
