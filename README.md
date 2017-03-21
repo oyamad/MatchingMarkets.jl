@@ -1,4 +1,4 @@
 # Matching.jl
 Matching algorithms in Julia
 
-Documentation for the library: http://oyamad.github.io/Matching.jl
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://oyamad.github.io/Matching.jl/latest)
