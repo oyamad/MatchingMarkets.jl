@@ -1,5 +1,7 @@
 module Matching
 
+using Compat
+
 include("util.jl")
 include("deferred_acceptance.jl")
 include("matching_tools.jl")

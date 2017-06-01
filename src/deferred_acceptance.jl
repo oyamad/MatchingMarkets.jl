@@ -87,7 +87,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     next_resps = ones(Int, num_props)
 
     # Props currently matched
-    current_props = Array(Int, num_resp_caps)
+    current_props = Array{Int}(num_resp_caps)
     fill!(current_props, resp_unmatched_idx)
 
     # Numbers of resps' occupied seats
@@ -96,9 +96,9 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     # Binary heaps
     bhs = [
         BinHeap(view(resp_ranks, :, r),
-        	    view(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
-    	        false)
-    	for r in 1:num_resps
+                view(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
+                false)
+        for r in 1:num_resps
     ]
 
     # Main loop
@@ -192,7 +192,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
 end
 
 # Many-to-one
-abstract DAProposal
+@compat abstract type DAProposal end
 immutable SProposing <: DAProposal end
 immutable CProposing <: DAProposal end
 
@@ -260,7 +260,7 @@ end
 
 function _caps2indptr(caps::Vector{Int})
     n = length(caps)
-    indptr = Array(Int, n+1)
+    indptr = Array{Int}(n+1)
     indptr[1] = 1
     @inbounds for i in 1:n
         indptr[i+1] = indptr[i] + caps[i]

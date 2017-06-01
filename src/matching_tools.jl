@@ -122,7 +122,7 @@ function random_prefs(rng::AbstractRNG,
     c_prefs = _random_prefs(rng, n, m)
 
     if allow_unmatched
-        unmatched_rankings = Array(Int, n) #rand(r, 2:n+1, m)
+        unmatched_rankings = Array{Int}(n) #rand(r, 2:n+1, m)
         _random_unmatched!(rng, c_prefs, unmatched_rankings)
         caps = _random_caps(rng, unmatched_rankings)
     else
@@ -137,7 +137,7 @@ random_prefs(m::Integer, n::Integer, T::Type{ReturnCaps};
 
 
 function _random_prefs(rng::AbstractRNG, m::Integer, n::Integer)
-    prefs = Array(Int, n+1, m)
+    prefs = Array{Int}(n+1, m)
     for j in 1:m
         prefs[end, j] = 0
     end
@@ -163,7 +163,7 @@ function _random_prefs(rng::AbstractRNG, m::Integer, n::Integer,
     prefs = _random_prefs(rng, m, n)
 
     if allow_unmatched
-        unmatched_rankings = Array(Int, m)
+        unmatched_rankings = Array{Int}(m)
         _random_unmatched!(rng, prefs, unmatched_rankings)
     end
 
