@@ -216,13 +216,13 @@ end
         for d in matchings_one_to_one
             # Male proposal
             m_matches, f_matches =
-                deferred_acceptance(d["m_prefs"], d["f_prefs"])
+                @inferred deferred_acceptance(d["m_prefs"], d["f_prefs"])
             @test m_matches == d["m_matches_m_opt"]
             @test f_matches == d["f_matches_m_opt"]
 
             # Female proposal
             f_matches, m_matches =
-                deferred_acceptance(d["f_prefs"], d["m_prefs"])
+                @inferred deferred_acceptance(d["f_prefs"], d["m_prefs"])
             @test m_matches == d["m_matches_f_opt"]
             @test f_matches == d["f_matches_f_opt"]
         end
@@ -232,7 +232,7 @@ end
         for d in matchings_many_to_one
             # Default (Student proposal)
             s_matches, c_matches, indptr =
-                deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"])
+                @inferred deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"])
             sort_matches!(c_matches, indptr)
             @test s_matches == d["s_matches_s_opt"]
             @test c_matches == d["c_matches_s_opt"]
@@ -240,7 +240,7 @@ end
 
             # Student proposal
             s_matches, c_matches, indptr =
-                deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"],
+                @inferred deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"],
                                     SProposing)
             sort_matches!(c_matches, indptr)
             @test s_matches == d["s_matches_s_opt"]
@@ -249,7 +249,7 @@ end
 
             # College proposal
             s_matches, c_matches, indptr =
-                deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"],
+                @inferred deferred_acceptance(d["s_prefs"], d["c_prefs"], d["caps"],
                                     CProposing)
             sort_matches!(c_matches, indptr)
             @test s_matches == d["s_matches_c_opt"]
@@ -262,7 +262,7 @@ end
         for d in matchings_many_to_many
             # Student proposal
             s_matches, c_matches, s_indptr, c_indptr =
-                deferred_acceptance(d["s_prefs"], d["c_prefs"],
+                @inferred deferred_acceptance(d["s_prefs"], d["c_prefs"],
                                     d["s_caps"], d["c_caps"])
             sort_matches!(s_matches, s_indptr)
             sort_matches!(c_matches, c_indptr)
@@ -273,7 +273,7 @@ end
 
             # Course proposal
             c_matches, s_matches, c_indptr, s_indptr =
-                deferred_acceptance(d["c_prefs"], d["s_prefs"],
+                @inferred deferred_acceptance(d["c_prefs"], d["s_prefs"],
                                     d["c_caps"], d["s_caps"])
             sort_matches!(s_matches, s_indptr)
             sort_matches!(c_matches, c_indptr)
