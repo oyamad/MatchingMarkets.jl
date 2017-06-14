@@ -63,7 +63,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
             )
         )
 
-    resp_ranks = _prefs2ranks(resp_prefs)
+    resp_ranks::Matrix{Int} = _prefs2ranks(resp_prefs)
 
     # IDs representing unmatched
     prop_unmatched, resp_unmatched = 0, 0
@@ -73,7 +73,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
 
     # Set up index pointers
     prop_indptr = _caps2indptr(prop_caps)
-    resp_indptr = _caps2indptr(resp_caps)
+    resp_indptr::Vector{Int} = _caps2indptr(resp_caps)
 
     num_prop_caps = prop_indptr[end] - 1
     num_resp_caps = resp_indptr[end] - 1
@@ -87,7 +87,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     next_resps = ones(Int, num_props)
 
     # Props currently matched
-    current_props = Array{Int}(num_resp_caps)
+    current_props::Vector{Int} = Array{Int}(num_resp_caps)
     fill!(current_props, resp_unmatched_idx)
 
     # Numbers of resps' occupied seats
