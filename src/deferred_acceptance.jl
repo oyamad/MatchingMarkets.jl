@@ -193,8 +193,8 @@ end
 
 # Many-to-one
 @compat abstract type DAProposal end
-immutable SProposing <: DAProposal end
-immutable CProposing <: DAProposal end
+struct SProposing <: DAProposal end
+struct CProposing <: DAProposal end
 
 """
     deferred_acceptance(s_prefs, c_prefs, caps[, proposal])

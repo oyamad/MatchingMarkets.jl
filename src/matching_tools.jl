@@ -113,7 +113,7 @@ end
 random_prefs(m::Integer, n::Integer; allow_unmatched::Bool=true) =
     random_prefs(Base.GLOBAL_RNG, m, n, allow_unmatched=allow_unmatched)
 
-immutable ReturnCaps end
+struct ReturnCaps end
 
 function random_prefs(rng::AbstractRNG,
                       m::Integer, n::Integer, ::Type{ReturnCaps};
