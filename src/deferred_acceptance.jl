@@ -192,7 +192,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
 end
 
 # Many-to-one
-@compat abstract type DAProposal end
+abstract type DAProposal end
 struct SProposing <: DAProposal end
 struct CProposing <: DAProposal end
 
