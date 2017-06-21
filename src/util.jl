@@ -1,6 +1,6 @@
 module Util
 
-type BinHeap{TR<:AbstractVector{Int},TD<:AbstractVector{Int}}
+mutable struct BinHeap{TR<:AbstractVector{Int},TD<:AbstractVector{Int}}
     ranking::TR
     data::TD
     is_heapified::Bool

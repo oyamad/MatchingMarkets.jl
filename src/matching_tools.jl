@@ -113,7 +113,7 @@ end
 random_prefs(m::Integer, n::Integer; allow_unmatched::Bool=true) =
     random_prefs(Base.GLOBAL_RNG, m, n, allow_unmatched=allow_unmatched)
 
-immutable ReturnCaps end
+struct ReturnCaps end
 
 function random_prefs(rng::AbstractRNG,
                       m::Integer, n::Integer, ::Type{ReturnCaps};
@@ -178,7 +178,7 @@ function _random_caps(rng::AbstractRNG, unmatched_rankings::Vector{Int})
         u[i] *= unmatched_rankings[i]
         u[i] += 1
     end
-    return floor(Int, u)
+    return floor.(Int, u)
 end
 
 function _random_caps(rng::AbstractRNG, m::Int, n::Int)
@@ -187,7 +187,7 @@ function _random_caps(rng::AbstractRNG, m::Int, n::Int)
         u[i] *= m
         u[i] += 1
     end
-    return floor(Int, u)
+    return floor.(Int, u)
 end
 
 
