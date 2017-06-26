@@ -1,9 +1,9 @@
-using Documenter, Matching
+using Documenter, MatchingMarkets
 
 makedocs(
-    modules = [Matching],
+    modules = [MatchingMarkets],
     format = :html,
-    sitename = "Matching.jl",
+    sitename = "MatchingMarkets.jl",
     pages = Any[
         "Home" => "index.md",
         "Library" => Any[
@@ -14,7 +14,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/oyamad/Matching.jl.git",
+    repo = "github.com/oyamad/MatchingMarkets.jl.git",
     branch = "gh-pages",
     target = "build",
     julia  = "0.5",

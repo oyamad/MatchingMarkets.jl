@@ -1,6 +1,6 @@
 # Private Internals
 
 ```@autodocs
-Modules = [Matching]
+Modules = [MatchingMarkets]
 Public = false
 ```

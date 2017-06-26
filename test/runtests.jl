@@ -1,4 +1,4 @@
-using Matching
+using MatchingMarkets
 using Base.Test
 
 include("test_deferred_acceptance.jl")
