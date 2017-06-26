@@ -91,49 +91,61 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
         BinMaxHeap(resp_caps[r])
         for r in 1:num_resps
     ]
+
+    remaining::Int = num_props
+    props_unmatched = collect(1:num_props)
+
     # Main loop
-    while total_num_prop_open_slots > 0
-        for p in 1:num_props
-            if nums_prop_vacant[p] > 0
-                #println(nums_prop_vacant[p])
-                @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
+    # ERROR WHEN RESP_CAP == 0
+    while remaining > 0
+        p = props_unmatched[remaining]
+        @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
 
-                # Prefers to be unmatched
-                if r == prop_unmatched
-                    total_num_prop_open_slots -= nums_prop_vacant[p]
-                    nums_prop_vacant[p] = 0
-                    #println("p", p, " no longer wants to find a partner")
+        # Prefers to be unmatched
+        if r == prop_unmatched
+            total_num_prop_open_slots -= nums_prop_vacant[p]
+            nums_prop_vacant[p] = 0
+            remaining -= 1
+            #println("p", p, " no longer wants to find a partner")
 
-                # Unacceptable for r
-                elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
-                    #println("p", p, " is rejected by ", r)
-                    # pass
+        # Unacceptable for r
+        elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
+            #println("p", p, " is rejected by ", r)
+            # pass
 
-                # Some seats vacant
-                elseif length(bhs[r]) < resp_caps[r]
-                    #println("p", p, " seats in ", r, " for vacancy")
-                    nums_prop_vacant[p] -= 1
-                    total_num_prop_open_slots -= 1
-                    push!(bhs[r], resp_ranks[p, r])
+        # Some seats vacant
+        elseif length(bhs[r]) < resp_caps[r]
+            #println("p", p, " seats in ", r, " for vacancy")
+            nums_prop_vacant[p] -= 1
+            total_num_prop_open_slots -= 1
+            push!(bhs[r], resp_ranks[p, r])
+            if nums_prop_vacant[p] == 0
+                remaining -= 1
+            end
 
-                # All seats occupied
-                else
-                    p_rank = resp_ranks[p, r]
-                    # Use binary heap structure
-                    least_prop_rank = top(bhs[r])
-                    least_prop = resp_prefs[least_prop_rank, r]
-                    if p_rank < least_prop_rank
-                        #println("p", p, " replace ", least_prop, " in ", r, " because p is more favorable (", p_rank, ", ", least_prop_rank, ")")
-                        @inbounds nums_prop_vacant[p] -= 1
-                        @inbounds nums_prop_vacant[least_prop] += 1####least prop exists?
-                        replace_least!(bhs[r], p_rank)
-                    else
-                        #println("p", p, " is less preferred to ", least_prop, " in ", r, " (", p_rank, ", ", least_prop_rank, ")")
-                    end
+        # All seats occupied
+        else
+            p_rank = resp_ranks[p, r]
+            # Use binary heap structure
+            least_prop_rank = top(bhs[r])
+            least_prop = resp_prefs[least_prop_rank, r]
+            if p_rank < least_prop_rank
+                #println("p", p, " replace ", least_prop, " in ", r, " because p is more favorable (", p_rank, ", ", least_prop_rank, ")")
+                @inbounds nums_prop_vacant[p] -= 1
+                @inbounds nums_prop_vacant[least_prop] += 1
+                replace_least!(bhs[r], p_rank)
+                if nums_prop_vacant[p] == 0
+                    remaining -= 1
                 end
-                next_resps[p] += 1
+                if nums_prop_vacant[least_prop] == 1
+                    remaining += 1
+                    props_unmatched[remaining] = least_prop
+                end
+            else
+                #println("p", p, " is less preferred to ", least_prop, " in ", r, " (", p_rank, ", ", least_prop_rank, ")")
             end
         end
+        next_resps[p] += 1
     end
 
     prop_matches = zeros(Int, num_prop_caps)
