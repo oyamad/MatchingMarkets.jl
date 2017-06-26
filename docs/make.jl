@@ -17,7 +17,7 @@ deploydocs(
     repo = "github.com/oyamad/MatchingMarkets.jl.git",
     branch = "gh-pages",
     target = "build",
-    julia  = "0.5",
+    julia  = "0.6",
     deps = nothing,
     make = nothing,
 )
