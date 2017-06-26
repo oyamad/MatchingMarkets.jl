@@ -8,5 +8,5 @@ notifications:
 #script: # use the default script setting which is equivalent to the following
 after_success:
     - julia -e 'Pkg.add("Documenter")'
-    - julia -e 'cd(Pkg.dir("MatchingMarkets")); include(joinpath("docs", "make.jl"))'
+    - julia -e 'cd(Pkg.dir("MatchingMarkets")); ENV["DOCUMENTER_DEBUG"] = "true"; include(joinpath("docs", "make.jl"))'
     - julia -e 'cd(Pkg.dir("MatchingMarkets")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
