@@ -1,4 +1,4 @@
-module Matching
+module MatchingMarkets
 
 include("util.jl")
 include("deferred_acceptance.jl")

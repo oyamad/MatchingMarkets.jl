@@ -1,6 +1,6 @@
 # Public Interface
 
 ```@autodocs
-Modules = [Matching]
+Modules = [MatchingMarkets]
 Private = false
 ```

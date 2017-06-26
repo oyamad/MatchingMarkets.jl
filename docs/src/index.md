@@ -1,11 +1,11 @@
-# Matching.jl
+# MatchingMarkets.jl
 
 Matching algorithms in Julia.
 
 ```@meta
-CurrentModule = Matching
+CurrentModule = MatchingMarkets
 DocTestSetup  = quote
-    using Matching
+    using MatchingMarkets
 end
 ```
 
@@ -14,7 +14,7 @@ end
 This is an unregistered package. To install, open a `Julia` session and type
 
 ```julia
-Pkg.clone("https://github.com/oyamad/Matching.jl")
+Pkg.clone("https://github.com/oyamad/MatchingMarkets.jl")
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ Pkg.clone("https://github.com/oyamad/Matching.jl")
 After installation, you can use this package by
 
 ```julia
-using Matching
+using MatchingMarkets
 ```
 
 ## Index
