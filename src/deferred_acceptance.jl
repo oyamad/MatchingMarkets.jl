@@ -5,7 +5,7 @@ many-to-one, and many-to-many matching problems.
 Author: Daisuke Oyama
 
 =#
-import .Util: BinHeap, least!, replace_least!
+import .Util: BinMaxHeap, top, push!, pop!, replace_least!
 
 # deferred_acceptance
 
@@ -86,51 +86,49 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     # Next resps to propose to
     next_resps = ones(Int, num_props)
 
-    # Props currently matched
-    current_props::Vector{Int} = Array{Int}(num_resp_caps)
-    fill!(current_props, resp_unmatched_idx)
-
-    # Numbers of resps' occupied seats
-    nums_resp_occupied = zeros(Int, num_resps)
-
     # Binary heaps
     bhs = [
-        BinHeap(view(resp_ranks, :, r),
-                view(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
-                false)
+        BinMaxHeap(resp_caps[r])
         for r in 1:num_resps
     ]
-
     # Main loop
     while total_num_prop_open_slots > 0
         for p in 1:num_props
             if nums_prop_vacant[p] > 0
+                #println(nums_prop_vacant[p])
                 @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
 
                 # Prefers to be unmatched
                 if r == prop_unmatched
                     total_num_prop_open_slots -= nums_prop_vacant[p]
                     nums_prop_vacant[p] = 0
+                    #println("p", p, " no longer wants to find a partner")
 
                 # Unacceptable for r
                 elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
+                    #println("p", p, " is rejected by ", r)
                     # pass
 
                 # Some seats vacant
-                elseif nums_resp_occupied[r] < resp_caps[r]
-                    current_props[resp_indptr[r]+nums_resp_occupied[r]] = p
-                    nums_resp_occupied[r] += 1
+                elseif length(bhs[r]) < resp_caps[r]
+                    #println("p", p, " seats in ", r, " for vacancy")
                     nums_prop_vacant[p] -= 1
                     total_num_prop_open_slots -= 1
+                    push!(bhs[r], resp_ranks[p, r])
 
                 # All seats occupied
                 else
+                    p_rank = resp_ranks[p, r]
                     # Use binary heap structure
-                    least_prop = least!(bhs[r])
-                    if resp_ranks[p, r] < resp_ranks[least_prop, r]
-                        replace_least!(bhs[r], p)
-                        nums_prop_vacant[p] -= 1
-                        @inbounds nums_prop_vacant[least_prop] += 1
+                    least_prop_rank = top(bhs[r])
+                    least_prop = resp_prefs[least_prop_rank, r]
+                    if p_rank < least_prop_rank
+                        #println("p", p, " replace ", least_prop, " in ", r, " because p is more favorable (", p_rank, ", ", least_prop_rank, ")")
+                        @inbounds nums_prop_vacant[p] -= 1
+                        @inbounds nums_prop_vacant[least_prop] += 1####least prop exists?
+                        replace_least!(bhs[r], p_rank)
+                    else
+                        #println("p", p, " is less preferred to ", least_prop, " in ", r, " (", p_rank, ", ", least_prop_rank, ")")
                     end
                 end
                 next_resps[p] += 1
@@ -139,16 +137,21 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     end
 
     prop_matches = zeros(Int, num_prop_caps)
-    resp_matches = current_props
+    resp_matches = Array{Int}(num_resp_caps)
+    prop_ctr = zeros(Int, num_props)
+
+    ctr = 1
     for r in 1:num_resps
-        for j in resp_indptr[r]:resp_indptr[r+1]-1
-            p = resp_matches[j]
-            if p == resp_unmatched_idx
-                resp_matches[j] = resp_unmatched
+        for j in 1:resp_caps[r]
+            if j <= length(bhs[r])
+                p = resp_prefs[bhs[r][j], r]
+                prop_matches[prop_indptr[p]+prop_ctr[p]] = r
+                prop_ctr[p] += 1
+                resp_matches[ctr] = p
             else
-                prop_matches[prop_indptr[p]+nums_prop_vacant[p]] = r
-                nums_prop_vacant[p] += 1
+                resp_matches[ctr] = 0
             end
+            ctr += 1
         end
     end
 
