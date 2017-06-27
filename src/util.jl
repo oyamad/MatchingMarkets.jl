@@ -61,7 +61,7 @@ function _heap_bubble_up!(bh::BinMaxHeap)
 end
 
 function _heap_bubble_down!(bh::BinMaxHeap)
-    i = bh.ind
+    i = 1
     @inbounds r = bh.data[i]
     swapped = true
     n = length(bh)
