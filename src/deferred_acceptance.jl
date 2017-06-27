@@ -95,8 +95,13 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     remaining::Int = num_props
     props_unmatched = collect(1:num_props)
 
+    p_rank::Int = 0
+    p::Int = 0
+    least_prop_rank::Int = 0
+    least_prop::Int = 0
+    r::Int = 0
+
     # Main loop
-    # ERROR WHEN RESP_CAP == 0
     while remaining > 0
         p = props_unmatched[remaining]
         @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
@@ -106,16 +111,13 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
             total_num_prop_open_slots -= nums_prop_vacant[p]
             nums_prop_vacant[p] = 0
             remaining -= 1
-            #println("p", p, " no longer wants to find a partner")
 
         # Unacceptable for r
         elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
-            #println("p", p, " is rejected by ", r)
             # pass
 
         # Some seats vacant
         elseif length(bhs[r]) < resp_caps[r]
-            #println("p", p, " seats in ", r, " for vacancy")
             nums_prop_vacant[p] -= 1
             total_num_prop_open_slots -= 1
             push!(bhs[r], resp_ranks[p, r])
@@ -125,12 +127,11 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
 
         # All seats occupied
         else
-            p_rank = resp_ranks[p, r]
+            @inbounds p_rank = resp_ranks[p, r]
             # Use binary heap structure
             least_prop_rank = top(bhs[r])
-            least_prop = resp_prefs[least_prop_rank, r]
             if p_rank < least_prop_rank
-                #println("p", p, " replace ", least_prop, " in ", r, " because p is more favorable (", p_rank, ", ", least_prop_rank, ")")
+                least_prop = resp_prefs[least_prop_rank, r]
                 @inbounds nums_prop_vacant[p] -= 1
                 @inbounds nums_prop_vacant[least_prop] += 1
                 replace_least!(bhs[r], p_rank)
@@ -141,8 +142,6 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
                     remaining += 1
                     props_unmatched[remaining] = least_prop
                 end
-            else
-                #println("p", p, " is less preferred to ", least_prop, " in ", r, " (", p_rank, ", ", least_prop_rank, ")")
             end
         end
         next_resps[p] += 1
@@ -262,11 +261,11 @@ function _prefs2ranks(prefs::Matrix{Int})
     ranks = similar(prefs)
     m, n = size(prefs)
     for j in 1:n, i in 1:m
-        k = prefs[i, j]
+        @inbounds k = prefs[i, j]
         if k == unmatched
-            ranks[end, j] = i
+            @inbounds ranks[end, j] = i
         else
-            ranks[k, j] = i
+            @inbounds ranks[k, j] = i
         end
     end
     return ranks

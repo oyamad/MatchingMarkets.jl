@@ -14,17 +14,6 @@ Base.getindex(bh::BinMaxHeap, ind::Int) = bh.data[ind]
 function top(bh::BinMaxHeap)
     return bh.data[1]
 end
-#function replace_least!(bh::BinMaxHeap, r::Int)
-#    r_least = least!(bh)
-#
-#    n = length(bh)
-#    bh.data[1] = bh.data[n]
-#    _heap_bubble_down!(bh, 1)
-#    bh.data[n] = v
-#    _heap_bubble_up!(bh, n)
-#
-#    return v_least
-#end
 
 # BEGIN: From DataStructures.jl/src/heaps/binary_heap.jl
 
