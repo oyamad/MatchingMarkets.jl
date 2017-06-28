@@ -1,4 +1,4 @@
-import MatchingMarkets.Util: BinMaxHeap, top, push!, pop!, replace_least!
+using MatchingMarkets.Util: BinMaxHeap, top, push!, pop!, replace_least!
 
 @testset "Testing util.jl" begin
 
