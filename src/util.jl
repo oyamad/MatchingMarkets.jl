@@ -1,5 +1,7 @@
 module Util
 
+import Base.==
+
 mutable struct BinMaxHeap{TD<:AbstractVector{Int}, TI<:Integer}
     data::TD
     ind::TI
@@ -7,19 +9,27 @@ end
 
 BinMaxHeap(cap::T) where {T <: Integer} = BinMaxHeap(Vector{Int}(cap), 0)
 
+==(bh1::BinMaxHeap, bh2::BinMaxHeap) = bh1.data[1:bh1.ind] == bh2.data[1:bh2.ind]
+
 Base.length(bh::BinMaxHeap) = bh.ind
 
 Base.getindex(bh::BinMaxHeap, ind::Int) = bh.data[ind]
 
 function top(bh::BinMaxHeap)
+    if bh.ind == 0
+        throw(BoundsError(
+            "attempt to access top of 0-element BinMaxheap"
+            )
+        )
+    end
     return bh.data[1]
 end
 
 # BEGIN: From DataStructures.jl/src/heaps/binary_heap.jl
 
 function push!(bh::BinMaxHeap, r::Int)
+    bh.data[bh.ind+1] = r
     bh.ind += 1
-    bh.data[bh.ind] = r
     _heap_bubble_up!(bh)
 end
 
