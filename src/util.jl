@@ -1,78 +1,78 @@
 module Util
 
-mutable struct BinHeap{TR<:AbstractVector{Int},TD<:AbstractVector{Int}}
-    ranking::TR
+import Base.==
+
+mutable struct BinMaxHeap{TD<:AbstractVector{Int}, TI<:Integer}
     data::TD
-    is_heapified::Bool
+    ind::TI
 end
 
-Base.length(bh::BinHeap) = length(bh.data)
+BinMaxHeap(cap::T) where {T <: Integer} = BinMaxHeap(Vector{Int}(cap), 0)
 
+==(bh1::BinMaxHeap, bh2::BinMaxHeap) = bh1.data[1:bh1.ind] == bh2.data[1:bh2.ind]
 
-function heapify!(bh::BinHeap)
-    if bh.is_heapified
-        return bh
-    end
+Base.length(bh::BinMaxHeap) = bh.ind
 
-    n = length(bh)
-    for i in 2:n
-        _heap_bubble_up!(bh, i)
-    end
+Base.getindex(bh::BinMaxHeap, ind::Int) = bh.data[ind]
 
-    bh.is_heapified = true
-    return bh
-end
-
-
-function least!(bh::BinHeap)
-    if !bh.is_heapified
-        heapify!(bh)
+function top(bh::BinMaxHeap)
+    if bh.ind == 0
+        throw(BoundsError(
+            "attempt to access top of 0-element BinMaxheap"
+            )
+        )
     end
     return bh.data[1]
 end
 
-
-function replace_least!(bh::BinHeap, v::Int)
-    v_least = least!(bh)
-
-    n = length(bh)
-    bh.data[1] = bh.data[n]
-    _heap_bubble_down!(bh, 1)
-    bh.data[n] = v
-    _heap_bubble_up!(bh, n)
-
-    return v_least
-end
-
-
 # BEGIN: From DataStructures.jl/src/heaps/binary_heap.jl
 
-function _heap_bubble_up!(bh::BinHeap, i::Int)
-    i0::Int = i
-    @inbounds v = bh.data[i]
+function push!(bh::BinMaxHeap, r::Int)
+    bh.data[bh.ind+1] = r
+    bh.ind += 1
+    _heap_bubble_up!(bh)
+end
+
+function pop!(bh::BinMaxHeap)
+    max_r = bh.data[1]
+    bh.data[1] = bh.data[bh.ind]
+    bh.ind -= 1
+    if bh.ind != 0
+        _heap_bubble_down!(bh)
+    end
+    return max_r
+end
+
+function replace_least!(bh::BinMaxHeap, r::Int)
+    pop!(bh)
+    push!(bh, r)
+end
+
+function _heap_bubble_up!(bh::BinMaxHeap)
+    i::Int = bh.ind
+    @inbounds r = bh.data[i]
 
     while i > 1  # nd is not root
         p = i >> 1
-        @inbounds vp = bh.data[p]
+        @inbounds rp = bh.data[p]
 
-        if bh.ranking[v] > bh.ranking[vp]
+        if r > rp
             # move parent downward
-            @inbounds bh.data[i] = vp
+            @inbounds bh.data[i] = rp
             i = p
         else
             break
         end
     end
 
-    if i != i0
-        @inbounds bh.data[i] = v
+    if i != bh.ind
+        @inbounds bh.data[i] = r
     end
-
-    return bh
 end
 
-function _heap_bubble_down!(bh::BinHeap, i::Int)
-    @inbounds v = bh.data[i]
+function _heap_bubble_down!(bh::BinMaxHeap)
+    i = 1
+    @inbounds r = bh.data[i]
     swapped = true
     n = length(bh)
     last_parent = n >> 1
@@ -81,27 +81,27 @@ function _heap_bubble_down!(bh::BinHeap, i::Int)
         lc = i << 1
         if lc < n   # contains both left and right children
             rc = lc + 1
-            @inbounds lv = bh.data[lc]
-            @inbounds rv = bh.data[rc]
-            if bh.ranking[rv] > bh.ranking[lv] #compare(comp, rv, lv)
-                if bh.ranking[rv] > bh.ranking[v]  #compare(comp, rv, v)
-                    @inbounds bh.data[i] = rv
+            @inbounds lr = bh.data[lc]
+            @inbounds rr = bh.data[rc]
+            if rr > lr #compare(comp, rv, lv)
+                if rr > r  #compare(comp, rv, v)
+                    @inbounds bh.data[i] = rr
                     i = rc
                 else
                     swapped = false
                 end
             else
-                if bh.ranking[lv] > bh.ranking[v]
-                    @inbounds bh.data[i] = lv
+                if lr > r
+                    @inbounds bh.data[i] = lr
                     i = lc
                 else
                     swapped = false
                 end
             end
         else        # contains only left child
-            @inbounds lv = bh.data[lc]
-            if bh.ranking[lv] > bh.ranking[v]
-                @inbounds bh.data[i] = lv
+            @inbounds lr = bh.data[lc]
+            if lr > r
+                @inbounds bh.data[i] = lr
                 i = lc
             else
                 swapped = false
@@ -109,9 +109,7 @@ function _heap_bubble_down!(bh::BinHeap, i::Int)
         end
     end
 
-    bh.data[i] = v
-
-    return bh
+    bh.data[i] = r
 end
 
 # END: From DataStructures.jl/src/heaps/binary_heap.jl

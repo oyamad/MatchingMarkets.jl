@@ -5,7 +5,7 @@ many-to-one, and many-to-many matching problems.
 Author: Daisuke Oyama
 
 =#
-import .Util: BinHeap, least!, replace_least!
+import .Util: BinMaxHeap, top, push!, pop!, replace_least!
 
 # deferred_acceptance
 
@@ -86,69 +86,83 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     # Next resps to propose to
     next_resps = ones(Int, num_props)
 
-    # Props currently matched
-    current_props::Vector{Int} = Array{Int}(num_resp_caps)
-    fill!(current_props, resp_unmatched_idx)
-
-    # Numbers of resps' occupied seats
-    nums_resp_occupied = zeros(Int, num_resps)
-
     # Binary heaps
     bhs = [
-        BinHeap(view(resp_ranks, :, r),
-                view(current_props, resp_indptr[r]:resp_indptr[r+1]-1),
-                false)
+        BinMaxHeap(resp_caps[r])
         for r in 1:num_resps
     ]
 
+    remaining::Int = num_props
+    props_unmatched = collect(1:num_props)
+
+    p_rank::Int = 0
+    p::Int = 0
+    least_prop_rank::Int = 0
+    least_prop::Int = 0
+    r::Int = 0
+
     # Main loop
-    while total_num_prop_open_slots > 0
-        for p in 1:num_props
-            if nums_prop_vacant[p] > 0
-                @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
+    while remaining > 0
+        p = props_unmatched[remaining]
+        @inbounds r = prop_prefs[next_resps[p], p]  # p proposes to r
 
-                # Prefers to be unmatched
-                if r == prop_unmatched
-                    total_num_prop_open_slots -= nums_prop_vacant[p]
-                    nums_prop_vacant[p] = 0
+        # Prefers to be unmatched
+        if r == prop_unmatched
+            total_num_prop_open_slots -= nums_prop_vacant[p]
+            nums_prop_vacant[p] = 0
+            remaining -= 1
 
-                # Unacceptable for r
-                elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
-                    # pass
+        # Unacceptable for r
+        elseif resp_ranks[p, r] > resp_ranks[resp_unmatched_idx, r]
+            # pass
 
-                # Some seats vacant
-                elseif nums_resp_occupied[r] < resp_caps[r]
-                    current_props[resp_indptr[r]+nums_resp_occupied[r]] = p
-                    nums_resp_occupied[r] += 1
-                    nums_prop_vacant[p] -= 1
-                    total_num_prop_open_slots -= 1
+        # Some seats vacant
+        elseif length(bhs[r]) < resp_caps[r]
+            nums_prop_vacant[p] -= 1
+            total_num_prop_open_slots -= 1
+            push!(bhs[r], resp_ranks[p, r])
+            if nums_prop_vacant[p] == 0
+                remaining -= 1
+            end
 
-                # All seats occupied
-                else
-                    # Use binary heap structure
-                    least_prop = least!(bhs[r])
-                    if resp_ranks[p, r] < resp_ranks[least_prop, r]
-                        replace_least!(bhs[r], p)
-                        nums_prop_vacant[p] -= 1
-                        @inbounds nums_prop_vacant[least_prop] += 1
-                    end
+        # All seats occupied
+        else
+            @inbounds p_rank = resp_ranks[p, r]
+            # Use binary heap structure
+            least_prop_rank = top(bhs[r])
+            if p_rank < least_prop_rank
+                least_prop = resp_prefs[least_prop_rank, r]
+                @inbounds nums_prop_vacant[p] -= 1
+                @inbounds nums_prop_vacant[least_prop] += 1
+                replace_least!(bhs[r], p_rank)
+                if nums_prop_vacant[p] == 0
+                    remaining -= 1
                 end
-                next_resps[p] += 1
+                if nums_prop_vacant[least_prop] == 1
+                    remaining += 1
+                    props_unmatched[remaining] = least_prop
+                end
             end
         end
+        next_resps[p] += 1
     end
 
     prop_matches = zeros(Int, num_prop_caps)
-    resp_matches = current_props
+    resp_matches = Array{Int}(num_resp_caps)
+    prop_ctr = zeros(Int, num_props)
+
+    ctr = 1
     for r in 1:num_resps
-        for j in resp_indptr[r]:resp_indptr[r+1]-1
-            p = resp_matches[j]
-            if p == resp_unmatched_idx
-                resp_matches[j] = resp_unmatched
+        for j in 1:resp_caps[r]
+            if j <= length(bhs[r])
+                p = resp_prefs[bhs[r][j], r]
+                prop_matches[prop_indptr[p]+prop_ctr[p]] = r
+                prop_ctr[p] += 1
+                resp_matches[ctr] = p
             else
-                prop_matches[prop_indptr[p]+nums_prop_vacant[p]] = r
-                nums_prop_vacant[p] += 1
+                resp_matches[ctr] = 0
             end
+            ctr += 1
         end
     end
 
@@ -247,11 +261,11 @@ function _prefs2ranks(prefs::Matrix{Int})
     ranks = similar(prefs)
     m, n = size(prefs)
     for j in 1:n, i in 1:m
-        k = prefs[i, j]
+        @inbounds k = prefs[i, j]
         if k == unmatched
-            ranks[end, j] = i
+            @inbounds ranks[end, j] = i
         else
-            ranks[k, j] = i
+            @inbounds ranks[k, j] = i
         end
     end
     return ranks
