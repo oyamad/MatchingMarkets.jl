@@ -207,7 +207,7 @@ end
 Given a vector `a` of length n, generate a random permutation of length n and
 store it in `a`.
 """
-function _randperm!{T<:Integer}(r::AbstractRNG, a::AbstractVector{T})
+function _randperm!(r::AbstractRNG, a::AbstractVector{T}) where T<:Integer
     # a = Array{typeof(n)}(n)
     n = length(a)
     @assert n <= Int64(2)^52
@@ -232,7 +232,7 @@ end
 Given an m x n matrix `a`, generate n random permutations of length m and store
 them in columns of `a`.
 """
-function _randperm2d!{T<:Integer}(r::AbstractRNG, a::AbstractMatrix{T})
+function _randperm2d!(r::AbstractRNG, a::AbstractMatrix{T}) where T<:Integer
     m, n = size(a)
     for j in :1:n
         _randperm!(r, view(a, :, j))

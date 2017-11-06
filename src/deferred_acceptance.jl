@@ -240,10 +240,10 @@ Compute a stable matching by the DA algorithm for a many-to-one matching
   contained in `c_matches[indptr[j]:indptr[j+1]-1]`.
 * `indptr::Vector{Int}` : Contains index pointers for `c_matches`.
 """
-function deferred_acceptance{P<:DAProposal}(s_prefs::Matrix{Int},
-                                            c_prefs::Matrix{Int},
-                                            caps::Vector{Int},
-                                            proposal::Type{P}=SProposing)
+function deferred_acceptance(s_prefs::Matrix{Int},
+                             c_prefs::Matrix{Int},
+                             caps::Vector{Int},
+                             proposal::Type{P}=SProposing) where P<:DAProposal
     s_caps = ones(Int, size(s_prefs, 2))
     if proposal == SProposing
         s_matches, c_matches, _, indptr =
