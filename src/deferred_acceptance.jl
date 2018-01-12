@@ -147,26 +147,17 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
         next_resps[p] += 1
     end
 
-    prop_matches = zeros(Int, num_prop_caps)
-    resp_matches = Array{Int}(num_resp_caps)
-    prop_ctr = zeros(Int, num_props)
-
-    ctr = 1
+    matching = Matching(num_props, num_resps)
     for r in 1:num_resps
         for j in 1:resp_caps[r]
             if j <= length(bhs[r])
                 p = resp_prefs[bhs[r][j], r]
-                prop_matches[prop_indptr[p]+prop_ctr[p]] = r
-                prop_ctr[p] += 1
-                resp_matches[ctr] = p
-            else
-                resp_matches[ctr] = 0
+                matching.matching[p, r] = true
             end
-            ctr += 1
         end
     end
 
-    return prop_matches, resp_matches, prop_indptr, resp_indptr
+    return matching
 end
 
 # One-to-one
@@ -200,9 +191,7 @@ Compute a stable matching by the DA algorithm for a one-to-one matching
 function deferred_acceptance(prop_prefs::Matrix{Int}, resp_prefs::Matrix{Int})
     prop_caps = ones(Int, size(prop_prefs, 2))
     resp_caps = ones(Int, size(resp_prefs, 2))
-    prop_matches, resp_matches, _, _ =
-        deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
-    return prop_matches, resp_matches
+    return deferred_acceptance(prop_prefs, resp_prefs, prop_caps, resp_caps)
 end
 
 # Many-to-one
@@ -246,13 +235,10 @@ function deferred_acceptance(s_prefs::Matrix{Int},
                              proposal::Type{P}=SProposing) where P<:DAProposal
     s_caps = ones(Int, size(s_prefs, 2))
     if proposal == SProposing
-        s_matches, c_matches, _, indptr =
-            deferred_acceptance(s_prefs, c_prefs, s_caps, caps)
+        return deferred_acceptance(s_prefs, c_prefs, s_caps, caps)
     else
-        c_matches, s_matches, indptr, _ =
-            deferred_acceptance(c_prefs, s_prefs, caps, s_caps)
+        return deferred_acceptance(c_prefs, s_prefs, caps, s_caps)
     end
-    return s_matches, c_matches, indptr
 end
 
 
