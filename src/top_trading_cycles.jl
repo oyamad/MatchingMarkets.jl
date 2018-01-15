@@ -12,8 +12,8 @@ import .Util: get_acceptables
 """
     top_trading_cycles(market, inverse=false)
 
-Compute a Pareto efficient matching by the TTC algorithm 
-for a two-sided matching problem.
+Compute a matching of a two-sided matching market by the TTC 
+algorithm.
 
 # Arguments
 

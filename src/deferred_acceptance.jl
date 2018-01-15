@@ -5,7 +5,7 @@ many-to-one, and many-to-many matching problems.
 Author: Daisuke Oyama
 
 =#
-import .Util: BinMaxHeap, top, push!, pop!, replace_least!
+import .Util: BinMaxHeap, top, push!, pop!, replace_least!, _prefs2ranks
 
 # deferred_acceptance
 """
@@ -117,23 +117,4 @@ function deferred_acceptance(market::TwoSidedMatchingMarket; inverse::Bool=false
     end
 
     return matching
-end
-
-
-function _prefs2ranks(prop_size::Int, resp_size::Int, prefs::Vector{Vector{Int}})
-    unmatched = 0
-    ranks = Matrix{Int}(prop_size+1, resp_size)
-    fill!(ranks, prop_size+1)
-    for i in 1:resp_size
-        for j in 1:prop_size+1
-            @inbounds k = prefs[i][j]
-            if k == unmatched
-                @inbounds ranks[end, i] = j
-                break
-            else
-                @inbounds ranks[k, i] = j
-            end
-        end
-    end
-    return ranks
 end
