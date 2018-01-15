@@ -114,4 +114,20 @@ end
 
 # END: From DataStructures.jl/src/heaps/binary_heap.jl
 
+
+function get_acceptables(prefs::Vector{Vector{Int}}, opposite_size::Int)
+    unmatched = 0
+    this_side_size = size(prefs, 1)
+    matrix = zeros(Bool, (opposite_size, this_side_size))
+    for i in 1:this_side_size
+        for op in prefs[i]
+            if op == unmatched
+                break
+            end
+            matrix[op, i] = true
+        end
+    end
+    return matrix
+end
+
 end  # module
