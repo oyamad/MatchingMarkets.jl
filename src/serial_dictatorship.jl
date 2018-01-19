@@ -67,7 +67,7 @@ function serial_dictatorship(market::TwoSidedMatchingMarket,
                 if r == prop_unmatched
                     break
                 elseif nums_resp_vacant[r] > 0 && is_acceptable[p, r]
-                    matching[p, r] = true
+                    matching[r, p] = true
                     nums_prop_vacant[p] -= 1
                     nums_resp_vacant[r] -= 1
                     break
@@ -129,7 +129,7 @@ function serial_dictatorship(market::OneSidedMatchingMarket,
                 if o == agent_unmatched
                     break
                 elseif nums_object_vacant[o] > 0
-                    matching[a, o] = true
+                    matching[o, a] = true
                     nums_agent_vacant[a] -= 1
                     nums_object_vacant[o] -= 1
                     break

@@ -111,7 +111,7 @@ function deferred_acceptance(market::TwoSidedMatchingMarket; inverse::Bool=false
         for j in 1:resps.caps[r]
             if j <= length(bhs[r])
                 p = resps.prefs[r][bhs[r][j]]
-                matching[p, r] = true
+                matching[r, p] = true
             end
         end
     end

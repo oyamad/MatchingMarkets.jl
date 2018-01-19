@@ -209,7 +209,9 @@ when specifying the optional argument `inverse=true`.
 
 - `num_agents::Int` : The number of agents.
 - `num_objects::Int` : The number of objects.
-- `objects::Objects` : Objects in the one-sided matching market.
+- `matching::SparseMatrixCSC{Bool}` : Matrix of Bool. If 
+  `matching[o, a] == true`, then that implies the agent `a` matches 
+  to the object `o`. Otherwise `i` and `o` do not match.
 """
 type Matching
     num_agents::Int
@@ -225,48 +227,48 @@ A constructer of the type `Matching` which returns an empty matching.
 """
 function Matching(num_agents::Int, num_objects::Int)
     return Matching(num_agents, num_objects, 
-        spzeros(Bool, num_agents, num_objects))
+        spzeros(Bool, num_objects, num_agents))
 end
 
 
 function Base.getindex(matching::Matching, 
-    agent_index::Int, object_index::Int)
+    object_index::Int, agent_index::Int)
     if 1 <= agent_index <= matching.num_agents
         if 1 <= object_index <= matching.num_objects
-            return matching.matching[agent_index, object_index]
+            return matching.matching[object_index, agent_index]
         end
     end
-    throw(BoundsError(matching.matching, (agent_index, object_index)))
+    throw(BoundsError(matching.matching, (object_index, agent_index)))
 end
 
 
-function Base.getindex(matching::Matching, agent_index::Int, 
-    object_index::Colon)
+function Base.getindex(matching::Matching, 
+    object_index::Colon, agent_index::Int)
     if 1 <= agent_index <= matching.num_agents
-        return matching.matching[agent_index, :]
+        return matching.matching[:, agent_index]
     end
-    throw(BoundsError(matching.matching, (agent_index, object_index)))
+    throw(BoundsError(matching.matching, (object_index, agent_index)))
 end
 
 
-function Base.getindex(matching::Matching, agent_index::Colon, 
-    object_index::Int)
+function Base.getindex(matching::Matching, 
+    object_index::Int, agent_index::Colon)
     if 1 <= object_index <= matching.num_objects
-        return matching.matching[:, object_index]
+        return matching.matching[object_index, :]
     end
-    throw(BoundsError(matching.matching, (agent_index, object_index)))
+    throw(BoundsError(matching.matching, (object_index, agent_index)))
 end
 
 
 function Base.setindex!(matching::Matching, bool::Bool, 
-    agent_index::Int, object_index::Int)
+    object_index::Int, agent_index::Int)
     if 1 <= agent_index <= matching.num_agents
         if 1 <= object_index <= matching.num_objects
-            matching.matching[agent_index, object_index] = bool
+            matching.matching[object_index, agent_index] = bool
             return
         end
     end
-    throw(BoundsError(matching.matching, (agent_index, object_index)))
+    throw(BoundsError(matching.matching, (object_index, agent_index)))
 end
 
 
@@ -274,9 +276,9 @@ function (matching::Matching)(index::Int; inverse::Bool=false)
     # agent index case
     if inverse == false
         if index < 1 || matching.num_agents < index
-            throw(BoundsError(matching.matching, (index, :)))
+            throw(BoundsError(matching.matching, (:, index)))
         end
-        sparse_objects, sparse_bools = findnz(matching.matching[index, :])
+        sparse_objects, sparse_bools = findnz(matching.matching[:, index])
         objects = Vector{Int}()
         for (s, bool) in zip(sparse_objects, sparse_bools)
             if bool
@@ -287,9 +289,9 @@ function (matching::Matching)(index::Int; inverse::Bool=false)
     # object index case
     else
         if index < 1 || matching.num_objects < index
-            throw(BoundsError(matching.matching, (:, index)))
+            throw(BoundsError(matching.matching, (index, :)))
         end
-        sparse_agents, sparse_bools = findnz(matching.matching[:, index])
+        sparse_agents, sparse_bools = findnz(matching.matching[index, :])
         agents = Vector{Int}()
         for (s, bool) in zip(sparse_agents, sparse_bools)
             if bool
@@ -299,6 +301,28 @@ function (matching::Matching)(index::Int; inverse::Bool=false)
         return agents
     end
 end
+
+
+function Base.show(io::IO, matching::Matching)
+    println(io, "MatchingMarkets.Matching (agent: object)")
+    for a in 1:matching.num_agents
+        objects = Vector{Int}()
+        for o in 1:matching.num_objects
+            if matching.matching[o, a]
+                Base.push!(objects, o)
+            end
+        end
+        text = a > 1 ? ", " : ""
+        text *= "$(a): "
+        print(io, text)
+        if size(objects, 1) == 0
+            print(io, "[]") # avoid print "Int64[]"
+        else
+            print(io, objects)
+        end
+    end
+end
+
 
 
 """
@@ -318,14 +342,14 @@ A constructer of the type `Matching` which returns an empty matching.
 """
 function get_all_pairs(matching::Matching; inverse::Bool=false)
     pairs = Dict{Int, Vector{Int}}()
-    agents, objects, bools = findnz(matching.matching)
+    objects, agents, bools = findnz(matching.matching)
 
     # agent -> objects
     if inverse == false
         for i in 1:matching.num_agents
             pairs[i] = Vector{Int}()
         end
-        for (agent, object, bool) in zip(agents, objects, bools)
+        for (object, agent, bool) in zip(objects, agents, bools)
             if bool
                 Base.push!(pairs[agent], object)
             end
@@ -335,7 +359,7 @@ function get_all_pairs(matching::Matching; inverse::Bool=false)
         for i in 1:matching.num_objects
             pairs[i] = Vector{Int}()
         end
-        for (agent, object, bool) in zip(agents, objects, bools)
+        for (object, agent, bool) in zip(objects, agents, bools)
             if bool
                 Base.push!(pairs[object], agent)
             end

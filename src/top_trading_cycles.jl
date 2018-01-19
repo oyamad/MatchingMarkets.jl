@@ -144,7 +144,7 @@ function top_trading_cycles(market::TwoSidedMatchingMarket; inverse::Bool=false)
             for i in 1:(size(c, 1) >> 1)
                 agent = c[2*i-1]
                 object = c[2*i] - agents.size
-                matching[agent, object] = true
+                matching[object, agent] = true
                 next_object_ranks[agent] += 1
                 next_agent_ranks[object] += 1
                 nums_agents_vacant[agent] -= 1

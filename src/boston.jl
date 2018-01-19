@@ -80,7 +80,7 @@ function boston(market::TwoSidedMatchingMarket; inverse::Bool=false)
             for j in 1:resps.caps[r]
                 if j <= length(bhs[r])
                     @inbounds p = resps.prefs[r][bhs[r][j]]
-                    @inbounds matching[p, r] = true
+                    @inbounds matching[r, p] = true
                     @inbounds nums_prop_vacant[p] -= 1
                     @inbounds nums_resp_vacant[r] -= 1
                 end
