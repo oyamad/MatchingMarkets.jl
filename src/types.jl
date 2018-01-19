@@ -106,13 +106,28 @@ end
 
 
 """
-Type representing a two sided matching market containing
-  two set of agents. 
+Type representing an enumeration of agents/objects in matching 
+markets (duplicates allowed). This class is used in the priority
+based alogrithms like the Serial Dictatorship mechanism.
 
 # Fields
 
-- `students::Agents` : Agents of one side in the two sided matching market.
-- `schools::Agents` : Agents of another side in the two sided matching market.
+- `enum::Vector{Int}` : Vector of agents/objects ordered by
+  the priority. The first agent/object has the highest priority.
+"""
+type Priority
+    enum::Vector{Int}
+end
+
+
+"""
+Type representing a two-sided matching market containing 
+two set of agents. 
+
+# Fields
+
+- `students::Agents` : Agents of one side in the two-sided matching market.
+- `schools::Agents` : Agents of another side in the two-sided matching market.
 """
 type TwoSidedMatchingMarket
     students::Agents
@@ -150,117 +165,179 @@ type TwoSidedMatchingMarket
 end
 
 
+"""
+Type representing a one-sided matching market containing agents and objects. 
+
+# Fields
+
+- `agents::Agents` : Agents in the one-sided matching market.
+- `objects::Objects` : Objects in the one-sided matching market.
+"""
 type OneSidedMatchingMarket
     agents::Agents
     objects::Objects
+
+    function OneSidedMatchingMarket(agents::Agents, objects::Objects)
+        for a in 1:agents.size
+            min_a = minimum(agents.prefs[a])
+            max_a = maximum(agents.prefs[a])
+            if min_a < 0 || objects.size < max_a
+                throw(ArgumentError(
+                    "`agents.prefs` contains invalid object numbers"))
+            end
+            if length(unique(agents.prefs[a])) != length(agents.prefs[a])
+                throw(ArgumentError(
+                    "`agents.prefs` contains duplicate object numbers"))
+            end
+        end
+        
+        new(agents, objects)
+    end
 end
 
 
 """
-Type representing a matching
+Type representing a matching of a one-sided matching market or a 
+two-sided matching market. In a one-sided market, a matching 
+is a function from agents to objects and outside options. 
+In a two-sided market, a matching is a function from students 
+to schools and outside options. Some alogrithms for a two-sided 
+market return a matching from schools to students and outside options, 
+when specifying the optional argument `inverse=true`.
+
+# Fields
+
+- `num_agents::Int` : The number of agents.
+- `num_objects::Int` : The number of objects.
+- `objects::Objects` : Objects in the one-sided matching market.
 """
 type Matching
-    num_students::Int
-    num_schools::Int
+    num_agents::Int
+    num_objects::Int
     matching::SparseMatrixCSC{Bool}
 end
 
 
-function Matching(num_students::Int, num_schools::Int)
-    return Matching(num_students, num_schools, spzeros(Bool, num_students, num_schools))
+"""
+    Matching(num_agents::Int, num_objects::Int)
+
+A constructer of the type `Matching` which returns an empty matching.
+"""
+function Matching(num_agents::Int, num_objects::Int)
+    return Matching(num_agents, num_objects, 
+        spzeros(Bool, num_agents, num_objects))
 end
 
 
-function Base.getindex(matching::Matching, student_index::Int, school_index::Int)
-    if 1 <= student_index <= matching.num_students
-        if 1 <= school_index <= matching.num_schools
-            return matching.matching[student_index, school_index]
+function Base.getindex(matching::Matching, 
+    agent_index::Int, object_index::Int)
+    if 1 <= agent_index <= matching.num_agents
+        if 1 <= object_index <= matching.num_objects
+            return matching.matching[agent_index, object_index]
         end
     end
-    throw(BoundsError(matching.matching, (student_index, school_index)))
+    throw(BoundsError(matching.matching, (agent_index, object_index)))
 end
 
 
-function Base.getindex(matching::Matching, student_index::Int, school_index::Colon)
-    if 1 <= student_index <= matching.num_students
-        return matching.matching[student_index, :]
+function Base.getindex(matching::Matching, agent_index::Int, 
+    object_index::Colon)
+    if 1 <= agent_index <= matching.num_agents
+        return matching.matching[agent_index, :]
     end
-    throw(BoundsError(matching.matching, (student_index, school_index)))
+    throw(BoundsError(matching.matching, (agent_index, object_index)))
 end
 
 
-function Base.getindex(matching::Matching, student_index::Colon, school_index::Int)
-    if 1 <= school_index <= matching.num_schools
-        return matching.matching[:, school_index]
+function Base.getindex(matching::Matching, agent_index::Colon, 
+    object_index::Int)
+    if 1 <= object_index <= matching.num_objects
+        return matching.matching[:, object_index]
     end
-    throw(BoundsError(matching.matching, (student_index, school_index)))
+    throw(BoundsError(matching.matching, (agent_index, object_index)))
 end
 
 
-function Base.setindex!(matching::Matching, bool::Bool, student_index::Int, school_index::Int)
-    if 1 <= student_index <= matching.num_students
-        if 1 <= school_index <= matching.num_schools
-            matching.matching[student_index, school_index] = bool
+function Base.setindex!(matching::Matching, bool::Bool, 
+    agent_index::Int, object_index::Int)
+    if 1 <= agent_index <= matching.num_agents
+        if 1 <= object_index <= matching.num_objects
+            matching.matching[agent_index, object_index] = bool
             return
         end
     end
-    throw(BoundsError(matching.matching, (student_index, school_index)))
+    throw(BoundsError(matching.matching, (agent_index, object_index)))
 end
 
 
 function (matching::Matching)(index::Int; inverse::Bool=false)
-    # student index case
+    # agent index case
     if inverse == false
-        if index < 1 || matching.num_students < index
+        if index < 1 || matching.num_agents < index
             throw(BoundsError(matching.matching, (index, :)))
         end
-        sparse_schools, sparse_bools = findnz(matching.matching[index, :])
-        schools = Vector{Int}()
-        for (s, bool) in zip(sparse_schools, sparse_bools)
+        sparse_objects, sparse_bools = findnz(matching.matching[index, :])
+        objects = Vector{Int}()
+        for (s, bool) in zip(sparse_objects, sparse_bools)
             if bool
-                Base.push!(schools, s)
+                Base.push!(objects, s)
             end
         end
-        return schools
-    # school index case
+        return objects
+    # object index case
     else
-        if index < 1 || matching.num_schools < index
+        if index < 1 || matching.num_objects < index
             throw(BoundsError(matching.matching, (:, index)))
         end
-        sparse_students, sparse_bools = findnz(matching.matching[:, index])
-        students = Vector{Int}()
-        for (s, bool) in zip(sparse_students, sparse_bools)
+        sparse_agents, sparse_bools = findnz(matching.matching[:, index])
+        agents = Vector{Int}()
+        for (s, bool) in zip(sparse_agents, sparse_bools)
             if bool
-                Base.push!(students, s)
+                Base.push!(agents, s)
             end
         end
-        return students
+        return agents
     end
 end
 
 
+"""
+    get_all_pairs(matching::Matching; inverse::Bool=false)
+
+A constructer of the type `Matching` which returns an empty matching.
+
+# Arguments
+- `matching::Matching` : A matching.
+- `inverse::Bool=false` : If true, then the keys of `pairs` will be 
+  objects. Otherwise the keys will be agents.
+
+# Returns
+- `pairs::Dict{Int, Vector{Int}}` : A dict whose keys are agents 
+  (if inverse = true, objects) and values are vector of matched 
+  objects (agents).
+"""
 function get_all_pairs(matching::Matching; inverse::Bool=false)
     pairs = Dict{Int, Vector{Int}}()
-    students, schools, bools = findnz(matching.matching)
+    agents, objects, bools = findnz(matching.matching)
 
-    # student -> schools
+    # agent -> objects
     if inverse == false
-        for i in 1:matching.num_students
+        for i in 1:matching.num_agents
             pairs[i] = Vector{Int}()
         end
-        for (student, school, bool) in zip(students, schools, bools)
+        for (agent, object, bool) in zip(agents, objects, bools)
             if bool
-                Base.push!(pairs[student], school)
+                Base.push!(pairs[agent], object)
             end
         end
-    # school -> students
+    # object -> agents
     else
-        for i in 1:matching.num_schools
+        for i in 1:matching.num_objects
             pairs[i] = Vector{Int}()
         end
-        for (student, school, bool) in zip(students, schools, bools)
+        for (agent, object, bool) in zip(agents, objects, bools)
             if bool
-                Base.push!(pairs[school], student)
+                Base.push!(pairs[object], agent)
             end
         end
     end

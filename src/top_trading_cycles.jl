@@ -8,7 +8,7 @@ Author: Akira Matsushita
 import LightGraphs: DiGraph, simplecycles
 import .Util: get_acceptables
 
-# top_trading_cycles
+# two-sided matching market
 """
     top_trading_cycles(market, inverse=false)
 
@@ -111,14 +111,14 @@ function top_trading_cycles(market::TwoSidedMatchingMarket; inverse::Bool=false)
                         break
                     end
                     age = objects.prefs[o][next_agent_ranks[o]]
-                    # pointing herself
+                    # pointing itself
                     if age == object_unmatched
                         next_agents[o] = age
                         nums_objects_vacant[o] = 0
                         objects_remaining -= 1
                         break
                     end
-                    # pointing at an object
+                    # pointing at an agent
                     if nums_agents_vacant[age] > 0
                         next_agents[o] = age
                         break
