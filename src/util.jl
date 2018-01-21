@@ -114,4 +114,39 @@ end
 
 # END: From DataStructures.jl/src/heaps/binary_heap.jl
 
+
+function _prefs2ranks(prop_size::Int, resp_size::Int, prefs::Vector{Vector{Int}})
+    unmatched = 0
+    ranks = Matrix{Int}(prop_size+1, resp_size)
+    fill!(ranks, prop_size+1)
+    for i in 1:resp_size
+        for j in 1:prop_size+1
+            @inbounds k = prefs[i][j]
+            if k == unmatched
+                @inbounds ranks[end, i] = j
+                break
+            else
+                @inbounds ranks[k, i] = j
+            end
+        end
+    end
+    return ranks
+end
+
+
+function get_acceptables(prefs::Vector{Vector{Int}}, opposite_size::Int)
+    unmatched = 0
+    this_side_size = size(prefs, 1)
+    matrix = zeros(Bool, (opposite_size, this_side_size))
+    for i in 1:this_side_size
+        for op in prefs[i]
+            if op == unmatched
+                break
+            end
+            matrix[op, i] = true
+        end
+    end
+    return matrix
+end
+
 end  # module
