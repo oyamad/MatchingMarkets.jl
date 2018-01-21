@@ -105,18 +105,184 @@ function Objects(s::Int)
 end
 
 
+abstract type AbstractEnum end;
+
+
 """
-Type representing an enumeration of agents/objects in matching 
-markets (duplicates allowed). This class is used in the priority
-based alogrithms like the Serial Dictatorship mechanism.
+Type representing an enumeration of agents in matching markets. 
+This class allows duplicates and lack of agents. It is used 
+in the priority based alogrithms like the Serial Dictatorship 
+mechanism.
 
 # Fields
 
 - `enum::Vector{Int}` : Vector of agents/objects ordered by
   the priority. The first agent/object has the highest priority.
 """
-type Priority
+type Enumeration <: AbstractEnum
     enum::Vector{Int}
+end
+
+
+"""
+Type representing a priority of agents in matching markets. 
+This class does NOT allow duplicates or lack of agents. 
+It is used in the Top Trading Cycles alogrithm for 
+a one-sided market.
+
+# Fields
+
+- `enum::Vector{Int}` : Vector of agents/objects ordered by
+  the priority. The first agent/object has the highest priority.
+"""
+type Priority <: AbstractEnum
+    enum::Vector{Int}
+
+    function Priority(enum::Vector{Int})
+        if minimum(enum) < 0
+            throw(ArgumentError(
+                "`enum` contains an invalid agent number"))
+        end
+
+        if size(enum, 1) != size(unique(enum), 1) 
+            throw(ArgumentError(
+                "type `Priority` does not allow duplicates of agents"))
+        end
+
+        new(enum)
+    end
+end
+
+
+"""
+Type representing ownership of objects in a one-sided matching 
+market. This class is used in the mixed-ownership market mechanisms 
+like the Top Trading Cycles alogrithm.
+
+# Fields
+
+- `num_objects::Int` : The number of agents.
+- `num_objects::Int` : The number of objects.
+- `owners::SparseMatrixCSC{Bool}` : Matrix representing the ownership 
+  structure. If `owners[a, o] == true`, it represents the agent `a` has 
+  a property right of the object `o`.
+"""
+type Owners
+    num_agents::Int
+    num_objects::Int
+    owners::SparseMatrixCSC{Bool}
+
+    function Owners(num_agents::Int, num_objects::Int, 
+        owners::SparseMatrixCSC{Bool})
+        if size(owners, 1) != num_agents
+            throw(ArgumentError(
+                "the number of columns of `owners` does "*
+                "not match `num_agents`"))
+        end
+
+        if size(owners, 2) != num_objects
+            throw(ArgumentError(
+                "the number of rows of `owners` does "*
+                "not match `num_objects`"))
+        end
+
+        new(num_agents, num_objects, owners)
+    end
+end
+
+
+"""
+    Owners(num_agents::Int, num_objects::Int, owners::Vector{Vector{Int}})
+
+A constructer of the type `Owners` using the Vector of Vectors. 
+`owners[o]` are the set of agents who hold the object `o`.
+"""
+function Owners(num_agents::Int, num_objects::Int, 
+    owners::Vector{Vector{Int}})
+    if size(owners, 1) != num_objects
+        throw(ArgumentError(
+            "the length of `owners` does not match `num_objects`"))
+    end
+
+    spm = spzeros(Bool, num_agents, num_objects)
+    for o in 1:num_objects
+        for a in owners[o]
+            if a < 1 || num_agents < a
+                throw(ArgumentError(
+                    "`owners` contains an invalid agent $(a)"))
+            end
+            spm[a, o] = true
+        end
+    end
+    return Owners(num_agents, num_objects, spm)
+end
+
+
+"""
+    Owners(num_agents::Int, num_objects::Int, owners::Vector{Vector{Any}})
+
+A constructer of the type `Owners` using the Vector of Vectors. 
+`owners[o]` are the set of agents who hold the object `o`.
+"""
+function Owners(num_agents::Int, num_objects::Int, 
+    owners::Vector{Vector{Any}})
+    if size(owners, 1) != num_objects
+        throw(ArgumentError(
+            "the length of `owners` does not match `num_objects`"))
+    end
+
+    spm = spzeros(Bool, num_agents, num_objects)
+    for o in 1:num_objects
+        for a in owners[o]
+            if typeof(a) != Int || a < 1 || num_agents < a
+                throw(ArgumentError(
+                    "`owners` contains an invalid agent $(a)"))
+            end
+            spm[a, o] = true
+        end
+    end
+    return Owners(num_agents, num_objects, spm)
+end
+
+
+"""
+    Owners(num_agents::Int, num_objects::Int, owners::Vector{Int})
+
+A simplified constructer of the type `Owners` when all objects 
+are possessed at most one agent. `owners[i] = 0` is interpreted as 
+no agents own the object `i`. 
+"""
+function Owners(num_agents::Int, num_objects::Int, 
+    owners::Vector{Int})
+    if size(owners, 1) != num_objects
+        throw(ArgumentError(
+            "the length of `owners` does not match `num_objects`"))
+    end
+    unowned = 0
+    spm = spzeros(Bool, num_agents, num_objects)
+    for (o, a) in enumerate(owners)
+        if a < 0 || num_agents < a
+            throw(ArgumentError(
+                "`owners` contains an invalid agent $(a)"))
+        elseif a == unowned
+            #pass
+        else
+            spm[a, o] = true
+        end
+    end
+    return Owners(num_agents, num_objects, spm)
+end
+
+
+"""
+    Owners(num_agents::Int, num_objects::Int)
+
+A constructer of the type `Owners` which returns a ownership structure 
+in which no agents hold any objects.
+"""
+function Owners(num_agents::Int, num_objects::Int)
+    return Owners(num_agents, num_objects, 
+        spzeros(Bool, num_agents, num_objects))
 end
 
 

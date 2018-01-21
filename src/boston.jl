@@ -8,7 +8,7 @@ import .Util: BinMaxHeap, top, push!, pop!, replace_least!, _prefs2ranks
 
 # boston
 """
-    boston(market, inverse=false)
+    boston(market; inverse=false)
 
 Compute a matching of a two-sided matching market by the Boston 
 mechanism.

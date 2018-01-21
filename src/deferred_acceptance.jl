@@ -9,7 +9,7 @@ import .Util: BinMaxHeap, top, push!, pop!, replace_least!, _prefs2ranks
 
 # deferred_acceptance
 """
-    deferred_acceptance(market, inverse=false)
+    deferred_acceptance(market; inverse=false)
 
 Compute a stable matching by the DA algorithm for a two-sided matching
 problem.

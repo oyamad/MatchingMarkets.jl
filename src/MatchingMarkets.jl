@@ -8,8 +8,9 @@ include("boston.jl")
 include("serial_dictatorship.jl")
 include("matching_tools.jl")
 
-export Agents, Objects, Priority, TwoSidedMatchingMarket, 
-    OneSidedMatchingMarket, Matching, get_all_pairs
+export Agents, Objects, Enumeration, Priority, Owners, 
+    TwoSidedMatchingMarket, OneSidedMatchingMarket, 
+    Matching, get_all_pairs
 export get_acceptables
 export deferred_acceptance
 export top_trading_cycles

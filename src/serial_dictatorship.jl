@@ -9,7 +9,7 @@ import .Util: get_acceptables
 
 # two-sided matching market
 """
-    serial_dictatorship(market, priority, inverse=false)
+    serial_dictatorship(market, enum; inverse=false)
 
 Compute a matching of a two-sided matching market by the Serial 
 Dictatorship (SD) mechanism.
@@ -18,7 +18,7 @@ Dictatorship (SD) mechanism.
 
 * `market::TwoSidedMatchingMarket` : The structure of the market that 
   contains two sides of agents (students and schools).
-* `priority::Priority` : An enumeration of students 
+* `enum::AbstractEnum` : An enumeration of students 
   (if inverse=true, schools). In order of the priority, each 
   student (school) proposes the most preferred one among the 
   remaining schools (students).
@@ -31,16 +31,16 @@ Dictatorship (SD) mechanism.
 * `matching::Matching` : The resulting matching of the SD mechanism.
 """
 function serial_dictatorship(market::TwoSidedMatchingMarket, 
-    priority::Priority; inverse::Bool=false)
+    enum::AbstractEnum; inverse::Bool=false)
     if inverse
         props, resps = market.schools, market.students
     else
         props, resps = market.students, market.schools
     end
 
-    if minimum(priority.enum) < 1 || props.size < maximum(priority.enum)
+    if minimum(enum.enum) < 1 || props.size < maximum(enum.enum)
         throw(ArgumentError(
-            "`priority` contains an inappropriate student (school) number"))
+            "`enum` contains an inappropriate student (school) number"))
     end
 
     # matrix of acceptable/unacceptable props
@@ -59,7 +59,7 @@ function serial_dictatorship(market::TwoSidedMatchingMarket,
     matching = Matching(props.size, resps.size)
 
     # Main loop
-    for p in priority.enum
+    for p in enum.enum
         if nums_prop_vacant[p] > 0
             next_rank = next_resp_ranks[p]
             for r in props.prefs[p][next_rank:end]
@@ -82,7 +82,7 @@ end
 
 # one-sided matching market
 """
-    serial_dictatorship(market, priority)
+    serial_dictatorship(market; enum)
 
 Compute a matching of a one-sided matching market by the Serial 
 Dictatorship (SD) mechanism.
@@ -91,7 +91,7 @@ Dictatorship (SD) mechanism.
 
 * `market::OneSidedMatchingMarket` : The structure of the market that 
   contains two sides of agents (students and schools).
-* `priority::Priority` : An enumeration of agents. In order 
+* `enum::AbstractEnum` : An enumeration of agents. In order 
   of the priority, each agent acquires the most preferred one among 
   the remaining objects.
 
@@ -100,12 +100,12 @@ Dictatorship (SD) mechanism.
 * `matching::Matching` : The resulting matching of the SD mechanism.
 """
 function serial_dictatorship(market::OneSidedMatchingMarket, 
-    priority::Priority)
+    enum::AbstractEnum)
     agents, objects = market.agents, market.objects
 
-    if minimum(priority.enum) < 1 || agents.size < maximum(priority.enum)
+    if minimum(enum.enum) < 1 || agents.size < maximum(enum.enum)
         throw(ArgumentError(
-            "`priority` contains an inappropriate agent number"))
+            "`enum` contains an inappropriate agent number"))
     end
 
     # IDs representing unmatched
@@ -121,7 +121,7 @@ function serial_dictatorship(market::OneSidedMatchingMarket,
     matching = Matching(agents.size, objects.size)
 
     # Main loop
-    for a in priority.enum
+    for a in enum.enum
         if nums_agent_vacant[a] > 0
             next_rank = next_obj_ranks[a]
             for o in agents.prefs[a][next_rank:end]
