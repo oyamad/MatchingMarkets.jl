@@ -438,6 +438,23 @@ function Base.setindex!(matching::Matching, bool::Bool,
 end
 
 
+"""
+    (matching::Matching)(index::Int; inverse::Bool=false)
+
+If `inverse == false`, return the objects that the agent `index` matches. 
+Otherwise return the agents that the object `index` matches.
+
+# Arguments
+
+* `index::Int` : The index of agent (If `inverse == true`, object).
+* `inverse::Bool=false`: If true, this function returns the 
+  objects that the agent `index` matches. Otherwise it returns a 
+  the agents that the object `index` matches.
+
+# Returns
+
+* `::Vector{Int}` : The matched objects (agents).
+"""
 function (matching::Matching)(index::Int; inverse::Bool=false)
     # agent index case
     if inverse == false
