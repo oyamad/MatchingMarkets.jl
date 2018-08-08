@@ -191,16 +191,23 @@ function _random_caps(rng::AbstractRNG, m::Int, n::Int)
 end
 
 
-# Copied from base/random.jl
-"Return a random `Int` (masked with `mask`) in ``[0, n)``, when `n <= 2^52`."
-@inline function rand_lt(r::AbstractRNG, n::Int, mask::Int=nextpow2(n)-1)
-    # this duplicates the functionality of RangeGenerator objects,
-    # to optimize this special case
-    while true
-        x = (Base.Random.rand_ui52_raw(r) % Int) & mask
-        x < n && return x
+if VERSION < v"0.7-"
+    # Copied from base/random.jl
+    "Return a random `Int` (masked with `mask`) in ``[0, n)``, when `n <= 2^52`."
+    @inline function rand_lt(r::AbstractRNG, n::Int, mask::Int=nextpow2(n)-1)
+        # this duplicates the functionality of RangeGenerator objects,
+        # to optimize this special case
+        while true
+            x = (Base.Random.rand_ui52_raw(r) % Int) & mask
+            x < n && return x
+        end
     end
+else
+    # From stdlib/Random/src/misc.jl
+    rand_lt(r::AbstractRNG, n::Int, mask::Int=nextpow2(n)-1) =
+        rand(r, Random.ltm52(n, mask))
 end
+
 
 # In-place version of randperm in base/random.jl
 """
