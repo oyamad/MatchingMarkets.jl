@@ -4,6 +4,7 @@ Tools for matching algorithms.
 Author: Daisuke Oyama
 
 =#
+using Random
 
 # random_prefs
 
@@ -111,7 +112,7 @@ function random_prefs(rng::AbstractRNG,
 end
 
 random_prefs(m::Integer, n::Integer; allow_unmatched::Bool=true) =
-    random_prefs(Base.GLOBAL_RNG, m, n, allow_unmatched=allow_unmatched)
+    random_prefs(Random.GLOBAL_RNG, m, n, allow_unmatched=allow_unmatched)
 
 struct ReturnCaps end
 
@@ -133,7 +134,7 @@ end
 
 random_prefs(m::Integer, n::Integer, T::Type{ReturnCaps};
              allow_unmatched::Bool=true) =
-    random_prefs(Base.GLOBAL_RNG, m, n, T, allow_unmatched=allow_unmatched)
+    random_prefs(Random.GLOBAL_RNG, m, n, T, allow_unmatched=allow_unmatched)
 
 
 function _random_prefs(rng::AbstractRNG, m::Integer, n::Integer)
