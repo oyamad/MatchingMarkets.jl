@@ -1,5 +1,5 @@
 using MatchingMarkets
-using Base.Test
+using Test
 
 include("test_deferred_acceptance.jl")
 include("test_matching_tools.jl")
