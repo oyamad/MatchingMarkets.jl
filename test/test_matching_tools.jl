@@ -13,7 +13,7 @@
         end
 
         @testset "permutation" begin
-            sorted_arrays = [repmat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
+            sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
                 @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
             end
@@ -41,14 +41,14 @@
         prefs_arrays_all = (s_prefs, c_prefs, s_prefs_allowed, c_prefs_allowed)
 
         @testset "permutation" begin
-            sorted_arrays = [repmat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
+            sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
                 @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
             end
         end
 
         @testset "permutation" begin
-            sorted_arrays = [repmat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
+            sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
                 @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
             end
