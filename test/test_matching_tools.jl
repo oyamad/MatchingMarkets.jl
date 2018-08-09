@@ -15,7 +15,7 @@
         @testset "permutation" begin
             sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
-                @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
+                @test sort(prefs_array; dims=1) == sorted_arrays[(i+1)%2+1]
             end
         end
 
@@ -43,14 +43,14 @@
         @testset "permutation" begin
             sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
-                @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
+                @test sort(prefs_array; dims=1) == sorted_arrays[(i+1)%2+1]
             end
         end
 
         @testset "permutation" begin
             sorted_arrays = [repeat(0:nums[i%2+1], 1, nums[i]) for i in 1:2]
             for (i, prefs_array) in enumerate(prefs_arrays_all)
-                @test sort(prefs_array, 1) == sorted_arrays[(i+1)%2+1]
+                @test sort(prefs_array; dims=1) == sorted_arrays[(i+1)%2+1]
             end
         end
 
