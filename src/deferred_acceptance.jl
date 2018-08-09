@@ -148,7 +148,7 @@ function deferred_acceptance(prop_prefs::Matrix{Int},
     end
 
     prop_matches = zeros(Int, num_prop_caps)
-    resp_matches = Array{Int}(num_resp_caps)
+    resp_matches = Array{Int}(undef, num_resp_caps)
     prop_ctr = zeros(Int, num_props)
 
     ctr = 1
@@ -274,7 +274,7 @@ end
 
 function _caps2indptr(caps::Vector{Int})
     n = length(caps)
-    indptr = Array{Int}(n+1)
+    indptr = Array{Int}(undef, n+1)
     indptr[1] = 1
     @inbounds for i in 1:n
         indptr[i+1] = indptr[i] + caps[i]

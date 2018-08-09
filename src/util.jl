@@ -7,7 +7,7 @@ mutable struct BinMaxHeap{TD<:AbstractVector{Int}, TI<:Integer}
     ind::TI
 end
 
-BinMaxHeap(cap::T) where {T <: Integer} = BinMaxHeap(Vector{Int}(cap), 0)
+BinMaxHeap(cap::T) where {T <: Integer} = BinMaxHeap(Vector{Int}(undef, cap), 0)
 
 ==(bh1::BinMaxHeap, bh2::BinMaxHeap) = bh1.data[1:bh1.ind] == bh2.data[1:bh2.ind]
 
