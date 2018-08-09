@@ -75,7 +75,8 @@
         @testset "caps not exceed rankings of unmatched" begin
             for (prefs_array, x) in ((c_prefs, caps),
                                      (c_prefs_allowed, caps_allowed))
-                rankings_unmatched = findn(prefs_array .== 0)[1]
+                I = findall(prefs_array .== 0)
+                rankings_unmatched = getindex.(I, 1)
                 @test all(x .<= rankings_unmatched)
             end
         end
