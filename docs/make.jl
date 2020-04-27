@@ -1,23 +1,19 @@
 using Documenter, MatchingMarkets
 
-makedocs(
-    modules = [MatchingMarkets],
-    format = :html,
-    sitename = "MatchingMarkets.jl",
-    pages = Any[
+makedocs(;
+    modules=[MatchingMarkets],
+    format=Documenter.HTML(),
+    pages=[
         "Home" => "index.md",
-        "Library" => Any[
+        "Library" => [
             "lib/public.md",
             "lib/internals.md",
         ],
-    ]
+    ],
+    repo="https://github.com/oyamad/MatchingMarkets.jl/blob/{commit}{path}#L{line}",
+    sitename="MatchingMarkets.jl",
 )
 
-deploydocs(
-    repo = "github.com/oyamad/MatchingMarkets.jl.git",
-    branch = "gh-pages",
-    target = "build",
-    julia  = "0.6",
-    deps = nothing,
-    make = nothing,
+deploydocs(;
+    repo="github.com/oyamad/MatchingMarkets.jl",
 )

@@ -11,10 +11,11 @@ end
 
 ## Installation
 
-This is an unregistered package. To install, open a `Julia` session and type
+This is an unregistered package.
+To install, enter Pkg mode by pressing `]` and run
 
 ```julia
-Pkg.clone("https://github.com/oyamad/MatchingMarkets.jl")
+add https://github.com/oyamad/MatchingMarkets.jl
 ```
 
 ## Usage
